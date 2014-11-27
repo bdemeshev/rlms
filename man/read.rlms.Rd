@@ -3,10 +3,14 @@
 \alias{read.rlms}
 \title{Read rlms data}
 \usage{
-read.rlms(file, suppress = FALSE)
+read.rlms(file, suppress = FALSE, nine2na = TRUE)
 }
 \arguments{
 \item{file}{the filename}
+
+\item{suppress}{logical, if true the default message is suppressed}
+
+\item{nine2na}{automatically convert 99999999 to NA for numeric variables}
 }
 \value{
 dataframe

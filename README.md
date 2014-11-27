@@ -1,7 +1,7 @@
 rlms
 ====
 
-Пакет `rlms` предназначен для работы с данными  [исследования RLMS](http://sophist.hse.ru/) в R. Пакет можно установить командами:
+Пакет `rlms` предназначен для работы с данными  [исследования RLMS](http://www.hse.ru/rlms/) в R. Пакет можно установить командами:
 ```r
 install.packages("devtools")
 library("devtools")

@@ -7,6 +7,7 @@ Author: Boris Demeshev
 Maintainer: Boris Demeshev <boris.demeshev@gmail.com>
 Imports:
     dplyr (>= 0.3),
-Description: RLMS-package: functions to facilitate loading and preprocessing rlms data
+Description: RLMS-package: functions to facilitate loading and preprocessing
+    rlms data
 License: MIT
 LazyData: true

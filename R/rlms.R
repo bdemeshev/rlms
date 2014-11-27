@@ -15,6 +15,7 @@ NULL
 #' @param file the filename
 #' @param suppress logical, if true the default message is suppressed
 #' @param nine2na automatically convert 99999999 to NA for numeric variables
+#' @export
 #' @return dataframe
 #' @examples
 #' read.rlms("r21i_os24a.sav")

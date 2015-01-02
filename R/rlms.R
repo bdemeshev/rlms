@@ -20,7 +20,7 @@ NULL
 #' @examples
 #' read.rlms("r21i_os24a.sav")
 read.rlms <- function(file, suppress=FALSE, nine2na=TRUE) {
-  df <- read.spss(file, to.data.frame = TRUE, reencode = "UTF-8")
+  df <- read.spss(file, to.data.frame = TRUE, reencode = TRUE)
   attr(df, "codepage") <- NULL
   
   # get variable labels

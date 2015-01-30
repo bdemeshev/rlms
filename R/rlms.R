@@ -3,7 +3,7 @@
 #' @name rlms
 #' @docType package
 #' @author Boris Demeshev 
-#' @import foreign dplyr
+#' @import foreign
 NULL
 
 #' Read rlms data
@@ -26,7 +26,8 @@ read.rlms <- function(file, suppress=FALSE, nine2na=TRUE) {
   # get variable labels
   varlabel=attr(df,"variable.labels")
   names(varlabel) <- NULL
-  var_meta <- data_frame(var=names(df), varlabel=varlabel)
+  var_meta <- data.frame(var=names(df), varlabel=varlabel,
+                         stringsAsFactors = FALSE)
   attr(df,"variable.labels") <- NULL
   
   # get value labels
@@ -38,7 +39,10 @@ read.rlms <- function(file, suppress=FALSE, nine2na=TRUE) {
     if (!is.null(value)) {
       vallabel <- names(value)
       attr(value,"names") <- NULL
-      temp <- data_frame(value=value, vallabel=vallabel, var=names(df)[i])
+      temp <- data.frame(value=value, 
+                         vallabel=vallabel, 
+                         var=names(df)[i],
+                         stringsAsFactors = FALSE)
       value_meta <- rbind(value_meta,temp)
       attr(df[,i],"value.labels") <- NULL
     }

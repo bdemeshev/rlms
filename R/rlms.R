@@ -67,3 +67,42 @@ read.rlms <- function(file, suppress=FALSE, nine2na=TRUE) {
   
   return(df)
 }
+
+
+
+
+#' Convert string with a number in Russian tradition in numeric
+#' 
+#' Convert string with a number in Russian tradition in numeric
+#' 
+#' Russian standards prescribes to use comma as a decimal separator. 
+#' This function removes spaces and converts string to number.
+#' 
+#' @param x the string with the number
+#' @return numeric the number converted from the string
+#' @export
+#' @examples
+#' rus2num("34 345,34")
+rus2num <- function(x) {
+  x <- gsub(",",".",x)
+  x <- gsub(" ","",x)
+  return(as.numeric(x))
+}
+
+
+#' Convert excel numeric date encoding to date
+#' 
+#' Convert excel numeric date encoding to date
+#'
+#' While reading excel files dates are sometimes replaced by their numeric codes.
+#' This function recovers original dates from these codes.
+#' 
+#' @param x the vector of numeric date codes
+#' @return the date
+#' @export
+#' @examples
+#' excel2date(12345)
+excel2date <- function(x) {
+  ans <- as.Date(as.POSIXct((bir-25569)*86400, tz="GMT", origin="1970-01-01"))
+  return(ans)  
+}

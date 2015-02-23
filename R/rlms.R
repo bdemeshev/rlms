@@ -201,3 +201,47 @@ rlms_sav2rds <- function(rlms_folder, flatten = TRUE) {
     saveRDS(temp, file=flist_out[j])
   }
 }
+
+
+#' Load RLMS data of specified wave/level/sample 
+#' 
+#' Load RLMS data of specified wave/level/sample 
+#' 
+#' Load RLMS data of specified wave/level/sample. This function automatically
+#' determines the file name. The function tries to load .Rds file. 
+#' If .Rds file is missing then .sav file is loaded.
+#' 
+#' @param wave the number of wave 
+#' @param level the level (individual/household/reproductive)
+#' @param sample the sample (all/representative)
+#' @return data.frame with RLMS data # #' @export
+#' @examples
+#' rlms_load("~/Downloads/Все выборки/", wave = 20, level = "individual", sample = "rep" )
+rlms_load <- function(rlms_folder, wave, 
+                         level=c("individual", "household", "reproductive"), 
+                         sample=c("all","representative")) {
+  level <- match.arg(level)
+  sample <- match.arg(sample)
+  
+  if ((wave==19) & (level="reproductive")) {
+       filename <- "r19PHv2.sav"
+    }  else {
+      filename <- "r"
+      
+      # add wave
+      if (nchar(wave)==1) filename <- paste0(filename,"0")
+      filename <- paste0(filename, wave)
+      
+      # add level
+      if (level=="individual") filename <- paste0(filename, "i")
+      if (level=="household") filename <- paste0(filename, "h")
+      
+      # add sample
+      if (sample=="all") filename <- paste0(filename, "all")
+      if (sample=="representative") filename <- paste0(filename, "_os")
+    }
+  
+  
+  
+  return(df)
+}

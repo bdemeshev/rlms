@@ -253,8 +253,8 @@ rlms_load <- function(rlms_folder, wave,
   flist_sav <- list.files(path = rlms_folder, recursive = TRUE, pattern = "*.sav", full.names = TRUE)
   flist_rds <- list.files(path = rlms_folder, recursive = TRUE, pattern = "*.Rds", full.names = TRUE)
 
-  rds_index <- str_detect(flist_rds, filename)
-  sav_index <- str_detect(flist_sav, filename)
+  rds_index <- stringr::str_detect(flist_rds, filename)
+  sav_index <- stringr::str_detect(flist_sav, filename)
   
   if (sum(rds_index)>0) { # if Rds file is present...
     df <- readRDS(flist_rds[rds_index]) # load it

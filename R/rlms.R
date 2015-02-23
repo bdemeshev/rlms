@@ -54,6 +54,10 @@ read.rlms <- function(file, suppress=FALSE, nine2na=TRUE) {
     }
   }
   
+  fileinfo <- rlms_fileinfo(file)
+  df$wave <- fileinfo$wave
+  df$level <- fileinfo$level
+  df$sample <- fileinfo$sample
   
   attr(df,"var_meta") <- var_meta
   attr(df,"value_meta") <- value_meta  

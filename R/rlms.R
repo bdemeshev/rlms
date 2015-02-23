@@ -189,7 +189,7 @@ rlms_hints <- function() {
 #' rlms_sav2rds("~/Downloads/Все выборки/")
 rlms_sav2rds <- function(rlms_folder, flatten = TRUE) {
   # remove trailing "/" if present
-  if (stringr::str_sub(rlms_folder, start=-1)=="/") rlms_folder <- str_sub(rlms_folder, end=-2)
+  if (stringr::str_sub(rlms_folder, start=-1)=="/") rlms_folder <- stringr::str_sub(rlms_folder, end=-2)
   
   flist_in <- list.files(path = rlms_folder, recursive = TRUE, pattern = "*.sav", full.names = TRUE)
   

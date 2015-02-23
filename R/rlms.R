@@ -54,6 +54,7 @@ read.rlms <- function(file, suppress=FALSE, nine2na=TRUE) {
     }
   }
   
+  # add wave-level-sample:
   fileinfo <- rlms_fileinfo(file)
   df$wave <- fileinfo$wave
   df$level <- fileinfo$level
@@ -67,6 +68,9 @@ read.rlms <- function(file, suppress=FALSE, nine2na=TRUE) {
     message("You may extract meta information now. Later some functions may destroy meta information. ")
     message("This message may be turned off with option: suppress=TRUE. ")
   }
+  
+  # to avoid long waiting time for occasional "df + enter":
+  df <- dplyr::as.tbl(df)
   
   return(df)
 }
@@ -218,7 +222,8 @@ rlms_sav2rds <- function(rlms_folder, flatten = TRUE) {
 #' @param wave the number of wave 
 #' @param level the level (individual/household/reproductive)
 #' @param sample the sample (all/representative)
-#' @return data.frame with RLMS data # #' @export
+#' @return data.frame with RLMS data 
+#' @export
 #' @examples
 #' rlms_load("~/Downloads/Все выборки/", wave = 20, level = "individual", sample = "rep" )
 rlms_load <- function(rlms_folder, wave, 
@@ -227,9 +232,9 @@ rlms_load <- function(rlms_folder, wave,
   level <- match.arg(level)
   sample <- match.arg(sample)
   
-  if ((wave==19) & (level="reproductive")) {
-       filename <- "r19PHv2.sav"
-    }  else {
+  if ((wave==19) & (level == "reproductive")) {
+       filename <- "r19PHv2"
+  }  else {
       filename <- "r"
       
       # add wave
@@ -243,9 +248,19 @@ rlms_load <- function(rlms_folder, wave,
       # add sample
       if (sample=="all") filename <- paste0(filename, "all")
       if (sample=="representative") filename <- paste0(filename, "_os")
-    }
+  }
   
+  flist_sav <- list.files(path = rlms_folder, recursive = TRUE, pattern = "*.sav", full.names = TRUE)
+  flist_rds <- list.files(path = rlms_folder, recursive = TRUE, pattern = "*.Rds", full.names = TRUE)
+
+  rds_index <- str_detect(flist_rds, filename)
+  sav_index <- str_detect(flist_sav, filename)
   
+  if (sum(rds_index)>0) { # if Rds file is present...
+    df <- readRDS(flist_rds[rds_index]) # load it
+  } else { # load original .sav file
+    df <- read.rlms(flist_sav[sav_index])
+  }
   
   return(df)
 }

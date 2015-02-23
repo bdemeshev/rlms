@@ -20,7 +20,7 @@ NULL
 #' @examples
 #' read.rlms("r21i_os24a.sav")
 read.rlms <- function(file, suppress=FALSE, nine2na=TRUE) {
-  df <- read.spss(file, to.data.frame = TRUE, reencode = TRUE)
+  df <- foreign::read.spss(file, to.data.frame = TRUE, reencode = TRUE)
   attr(df, "codepage") <- NULL
   
   # get variable labels
@@ -35,8 +35,7 @@ read.rlms <- function(file, suppress=FALSE, nine2na=TRUE) {
   
   for (i in 1:ncol(df)) {  
     value <- attr(df[,i],"value.labels")
-    
-    if (!is.null(value)) {
+    if (length(value)>0) { # NULL and numeric(0) are ignored
       vallabel <- names(value)
       attr(value,"names") <- NULL
       temp <- data.frame(value=value, 
@@ -166,3 +165,39 @@ rlms_hints <- function() {
   message("To extract zip archive with correct cyrillic folder names one may use 'The unarchiver' (free), see http://unarchiver.c3.cx/")
 }
 
+
+
+#' Convert all RLMS files from .sav to .Rds 
+#' 
+#' Convert all RLMS files from .sav to .Rds 
+#' 
+#' Convert all RLMS files from .sav to .Rds 
+#' 
+#' @param rlms_folder path to rlms data 
+#' @param flatten logical, whether to flatten folder structure, default is TRUE
+#' @return nothing
+#' @export
+#' @examples
+#' rlms_sav2rds("~/Downloads/Все выборки/")
+rlms_sav2rds <- function(rlms_folder, flatten = TRUE) {
+  # remove trailing "/" if present
+  if (stringr::str_sub(rlms_folder, start=-1)=="/") rlms_folder <- str_sub(rlms_folder, end=-2)
+  
+  flist_in <- list.files(path = rlms_folder, recursive = TRUE, pattern = "*.sav", full.names = TRUE)
+  
+  flist_info <- rlms_fileinfo(flist_in)
+  
+  flist_out <- stringr::str_replace(flist_in, ".sav", ".Rds")
+  if (flatten) flist_out <- paste0(rlms_folder,"/",basename(flist_out)) # remove path if we flatten folder structure
+  
+  
+  for (j in 1:length(flist_in)) {
+    message("Processing ",flist_info$file_short[j],
+            ", wave: ",flist_info$wave[j],
+            ", level: ",flist_info$level[j],
+            ", sample: ",flist_info$sample[j],
+            ", ", (100*j) %/% length(flist_in), "% done")
+    temp <- read.rlms(flist_in[j], suppress = TRUE)
+    saveRDS(temp, file=flist_out[j])
+  }
+}

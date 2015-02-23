@@ -250,6 +250,10 @@ rlms_load <- function(rlms_folder, wave,
       if (sample=="representative") filename <- paste0(filename, "_os")
   }
   
+  # remove trailing "/" if present
+  if (stringr::str_sub(rlms_folder, start=-1)=="/") rlms_folder <- stringr::str_sub(rlms_folder, end=-2)
+  
+  
   flist_sav <- list.files(path = rlms_folder, recursive = TRUE, pattern = "*.sav", full.names = TRUE)
   flist_rds <- list.files(path = rlms_folder, recursive = TRUE, pattern = "*.Rds", full.names = TRUE)
 

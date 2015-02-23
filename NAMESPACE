@@ -2,5 +2,7 @@
 
 export(excel2date)
 export(read.rlms)
+export(rlms_fileinfo)
+export(rlms_hints)
 export(rus2num)
 import(foreign)

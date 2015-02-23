@@ -106,3 +106,63 @@ excel2date <- function(x) {
   ans <- as.Date(as.POSIXct((bir-25569)*86400, tz="GMT", origin="1970-01-01"))
   return(ans)  
 }
+
+
+
+
+
+#' Detect wave, sample and level from filename of rlms file
+#' 
+#' Detect wave, sample and level from filename of rlms file
+#' 
+#' RLMS filenames contain info about the number of wave, sample (representative or all) and
+#' level (household, individual and a special case of reproductive)
+#' 
+#' @param flist the string vector of filenames with or without path
+#' @return data.frame containing short filename, wave, level and sample columns
+#' @export
+#' @examples
+#' rlms_fileinfo("r06hall23.sav")
+#' # specify rlms folder first
+#' flist_long <- list.files("~/Downloads/Все выборки/", recursive = TRUE, pattern = "*.sav")
+#' rlms_fileinfo(flist_long)
+rlms_fileinfo <- function(flist) {
+  flist_short <- basename(flist) # transform filenames with path to short filenames
+  
+  flist_sep <- stringr::str_match(flist_short, "r([0-9]{2})([ih])(all|_os)[a-zA-Z0-9]*.sav")
+  df <- data.frame(cbind(flist_short, matrix(flist_sep[,-1], ncol=3)), stringsAsFactors = FALSE)
+  # here we need to specify ncol=3 to correctly work with scalar flist
+  
+  names(df) <- c("file_short", "wave", "level", "sample")
+  
+  df$wave <- as.numeric(df$wave)
+  
+  recode <- c(individual="i",household="h", reproductive="r")
+  df$level <- factor(df$level, levels = recode, labels = names(recode))
+  
+  recode <- c(all="all",representative="_os")
+  df$sample <- factor(df$sample, levels = recode, labels = names(recode))
+  
+  women_rep <- df$file_short == "r19PHv2.sav"
+  df$wave[women_rep] <- 19
+  df$level[women_rep] <- "reproductive"
+  df$sample[women_rep] <- NA
+  
+  return(df)
+}
+
+#' Display some RLMS related hints
+#' 
+#' Display some RLMS related hints
+#' 
+#' Display some RLMS related hints
+#' 
+#' @return nothing, just prints some messages
+#' @export
+#' @examples
+#' rlms_hints()
+rlms_hints <- function() {
+  message("macos specific:")
+  message("To extract zip archive with correct cyrillic folder names one may use 'The unarchiver' (free), see http://unarchiver.c3.cx/")
+}
+

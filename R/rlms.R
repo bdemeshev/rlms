@@ -60,8 +60,13 @@ rlms_yesno_standartize <- function(x) {
   x_simple <- tolower(rlms_remove_apostrophe(x))
 
   x_new <- x
-  x_new[x_simple == "да"] <- "да"
-  x_new[x_simple == "нет"] <- "нет"
+
+  yes <- "\u0434\u0430" # this is yes in russian
+  no <- "\u043d\u0435\u0442" # this is no in russian
+  # explicit codes are used to avoid warning in check()
+
+  x_new[x_simple == yes] <- yes
+  x_new[x_simple == no] <- no
   return(x_new)
 }
 

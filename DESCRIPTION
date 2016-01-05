@@ -1,12 +1,14 @@
 Package: rlms
 Type: Package
-Title: RLMS-package: functions to facilitate loading and preprocessing of rlms data
+Title: Package to Facilitate Loading and Preprocessing of RLMS Data
 Version: 0.5
 Date: 2015-02-23
 Authors@R: c(person("Boris", "Demeshev", email = "boris.demeshev@gmail.com",
     role = "cre"))
-Description: RLMS-package: functions to facilitate loading and preprocessing
-    of rlms data.
+Description: Functions to facilitate loading and preprocessing
+    of RLMS data. Simple cleanup of factor variables.
+    Extraction of meta information about labels.
+Encoding: UTF-8
 Imports:
     stringr (>= 0.6.2),
     foreign (>= 0.8-66),

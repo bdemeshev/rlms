@@ -10,5 +10,6 @@ Description: RLMS-package: functions to facilitate loading and preprocessing
 Imports:
     stringr (>= 0.6.2),
     foreign (>= 0.8-66),
+    haven (>= 0.2.0),
     dplyr (>= 0.4)
 License: GPL-2

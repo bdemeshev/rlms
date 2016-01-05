@@ -22,9 +22,49 @@ NULL
 #' # read.rlms("r21i_os24a.sav")
 read.rlms <- function(file, suppress = FALSE, nine2na = TRUE) {
   message("This function is deprecated. Please use rlms_read instead of.")
-  df <- rlms_read(file = file, suppress = suppress, nine2na = nine2na)
+  df <- rlms_read(file = file,
+                  suppress = suppress,
+                  nine2na = nine2na,
+                  yesno = FALSE,
+                  apostrophe = FALSE)
   return(df)
 }
+
+
+#' Remove apostrophes
+#'
+#' Remove apostrophes
+#'
+#' Remove apostrophes
+#'
+#' @param x character vector
+#' @export
+#' @return character vector with apostrophes removed
+rlms_remove_apostrophe <- function(x) {
+  with_apostrophe <- stringr::str_detect(x, "^\\u2018.+\\u2019$")
+  x_new <- stringr::str_match(x, "^\\u2018(.+)\\u2019$")[, 2]
+  x_new[!with_apostrophe] <- x[!with_apostrophe]
+  return(x_new)
+}
+
+#' Standartize yes/no
+#'
+#' Standartize yes/no
+#'
+#' Standartize yes/no
+#'
+#' @param x character vector
+#' @export
+#' @return character vector with standartized yes/no
+rlms_yesno_standartize <- function(x) {
+  x_simple <- tolower(rlms_remove_apostrophe(x))
+
+  x_new <- x
+  x_new[x_simple == "да"] <- "да"
+  x_new[x_simple == "нет"] <- "нет"
+  return(x_new)
+}
+
 
 
 #' Read rlms data
@@ -34,14 +74,28 @@ read.rlms <- function(file, suppress = FALSE, nine2na = TRUE) {
 #' Read rlms data and all the meta information. Destroy useless attributes.
 #'
 #' @param file the filename
+#' @param haven use haven package, FALSE by default
+#' @param yesno convert yes/no answers to lowercase yes/no without apostrophes
+#' @param apostrophe trim apostrophes, TRUE by default
 #' @param suppress logical, if true the default message is suppressed
 #' @param nine2na automatically convert 99999999 to NA for numeric variables
 #' @export
 #' @return dataframe
 #' @examples
 #' # rlms_read("r21i_os24a.sav")
-rlms_read <- function(file, suppress = FALSE, nine2na = TRUE) {
-  df <- foreign::read.spss(file, to.data.frame = TRUE, reencode = TRUE)
+rlms_read <- function(file,
+                      suppress = FALSE,
+                      nine2na = TRUE,
+                      yesno = TRUE,
+                      apostrophe = TRUE,
+                      haven = FALSE) {
+
+  if (haven) {
+    df <- haven::read_spss(file)
+    # check the rest of the file with this option!
+  } else {
+    df <- foreign::read.spss(file, to.data.frame = TRUE, reencode = TRUE)
+  }
   attr(df, "codepage") <- NULL
 
   # get variable labels
@@ -69,20 +123,48 @@ rlms_read <- function(file, suppress = FALSE, nine2na = TRUE) {
     }
   }
 
-  # replace 99999996 for numeric variables
-  if (nine2na) {
-    for (i in 1:ncol(df)) {
-      if (class(df[, i]) == "numeric") {
-        df[, i] <- ifelse(df[, i] > 99999995, NA, df[, i])
+
+  for (i in 1:ncol(df)) {
+    var_class <- class(df[, i])
+    if ((nine2na) & (var_class == "numeric")) {
+      # replace 99999990+ for numeric variables
+      df[, i] <- ifelse(df[, i] > 99999990, NA, df[, i])
+    }
+    if ((apostrophe) & (var_class == "factor")) {
+      # trim apostrophes \\u2018 and \\u2019
+      levels(df[, i]) <- rlms_remove_apostrophe(levels(df[, i]))
+    }
+    if ((yesno) & (var_class == "factor")) {
+      # convert yes/no to lowercase without apostrophes
+      levels(df[, i]) <- rlms_yesno_standartize(levels(df[, i]))
+    }
+
+    # remove "" in levels
+    if (var_class == "factor") {
+      if (sum(df[, i] == "", na.rm = TRUE) == 0) {
+        levels <- levels(df[, i])
+        levels_new <- setdiff(levels, "")
+        df[, i] <- factor(df[, i], levels = levels_new)
       }
     }
+
   }
+
 
   # add wave-level-sample:
   fileinfo <- rlms_fileinfo(file)
   df$wave <- fileinfo$wave
   df$level <- fileinfo$level
   df$sample <- fileinfo$sample
+
+  if (yesno) {
+    value_meta <-
+      dplyr::mutate(value_meta, vallabel = rlms_yesno_standartize(vallabel))
+  }
+  if (apostrophe) {
+    value_meta <-
+      dplyr::mutate(value_meta, vallabel = rlms_remove_apostrophe(vallabel))
+  }
 
   attr(df, "var_meta") <- var_meta
   attr(df, "value_meta") <- value_meta
@@ -91,8 +173,9 @@ rlms_read <- function(file, suppress = FALSE, nine2na = TRUE) {
     message("Variable labels: attr(df, 'var_meta'). Value labels: attr(df, 'value_meta').")
     message("You may extract meta information now.")
     message("Later some functions may destroy meta information. ")
-    message("This message may be turned off with option: suppress=TRUE. ")
+    message("This message may be turned off with option: suppress = TRUE. ")
   }
+
 
   # to avoid long waiting time for occasional "df + enter":
   df <- dplyr::as.tbl(df)

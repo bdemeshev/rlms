@@ -4,7 +4,8 @@
 \alias{rlms_read}
 \title{Read rlms data}
 \usage{
-rlms_read(file, suppress = FALSE, nine2na = TRUE)
+rlms_read(file, suppress = FALSE, nine2na = TRUE, yesno = TRUE,
+  apostrophe = TRUE, haven = FALSE)
 }
 \arguments{
 \item{file}{the filename}
@@ -12,6 +13,12 @@ rlms_read(file, suppress = FALSE, nine2na = TRUE)
 \item{suppress}{logical, if true the default message is suppressed}
 
 \item{nine2na}{automatically convert 99999999 to NA for numeric variables}
+
+\item{yesno}{convert yes/no answers to lowercase yes/no without apostrophes}
+
+\item{apostrophe}{trim apostrophes, TRUE by default}
+
+\item{haven}{use haven package, FALSE by default}
 }
 \value{
 dataframe

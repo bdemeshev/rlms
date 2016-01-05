@@ -8,7 +8,7 @@ rlms
 install.packages("devtools")
 devtools::install_github("bdemeshev/rlms")
 ```
-Пакеты устанавливается один раз, повторять эти команды каждый раз при работе с данными RLMS не нужно :)
+Пакеты устанавливается один раз, повторять эти две команды каждый раз при работе с данными RLMS не нужно :)
 
 
 Данные можно загрузить командой:
@@ -19,7 +19,7 @@ df <- rlms_read("r21i_os24a.sav")
 
 Пакет автоматически сохраняет метаданные о названии переменных:
 ```r
-var_meta <- attr(df,"var_meta")
+var_meta <- attr(df, "var_meta")
 head(var_meta)
 ```
 
@@ -49,7 +49,8 @@ rlms_sav2rds("~/Downloads/Все выборки/")
 Можно загружать данные по номеру волны: 
 
 ```r
-df <- rlms_load("~/Downloads/Все выборки/", wave=20, sample="all", level="individual")
+df <- rlms_load("~/Downloads/Все выборки/", 
+  wave = 20, sample = "all", level = "individual")
 ```
 
 Расшифровка имени файла:
@@ -63,7 +64,7 @@ rlms_fileinfo("r10hall23.sav")
 
 - [ ] синтаксис стиль по wickham style guide
 - [x] travis ci тестирование
-- [ ] удалять автоматом level="" если таких данных нет (без этого возникает warning duplicate levels), другие отсутствующие уровни удалять опционально
+- [x] удалять автоматом level="" если таких данных нет (без этого возникает warning duplicate levels), другие отсутствующие уровни удалять опционально
 - [ ] загрузка через haven
 - [ ] слияние нескольких волн в панель. Проект функции. на входе: указываются волны, переменные, на выходе: панелька под `plm`. Пакет `psData` похоже не активен. 
 - [ ] слияние индивидуальных и семейных файлов. Проект функции. ??? Похоже пункты 1 и 2 это должна быть __единая__ функция, см [psidR](https://github.com/floswald/psidR/)
@@ -79,7 +80,7 @@ df <- rlms_ipanel(wave=5:22, ~educ+father(educ)+spouse(income+educ)+ spouse(inco
 
 - [ ] встроенный data.frame с информацией по волнам ? (туда имя файла включить)
 - [ ] проверить, есть ли особенности обработки модуля по женщинам 19 волны
-- [ ] унифицировать ДА, да, Да, etc в кодах переменных. опция
+- [x] унифицировать ДА, да, Да, etc в кодах переменных. опция
 
 - [ ] документация!!!! пример построения простой панели с fe/re/pooled
 
@@ -101,7 +102,7 @@ df <- rlms_read("r21i_os24a.sav")
 
 The package automatically saves the metadata about variable full names:
 ```r
-var_meta <- attr(df,"var_meta")
+var_meta <- attr(df, "var_meta")
 head(var_meta)
 ```
 
@@ -131,7 +132,8 @@ Note: To correctly extract cyrillic folder names (CP866 encoding is used) on mac
 
 One may load data by wave number: 
 ```r
-df <- rlms_load("~/Downloads/Все выборки/", wave=20, sample="all", level="individual")
+df <- rlms_load("~/Downloads/Все выборки/", 
+  wave = 20, sample = "all", level = "individual")
 ```
 
 Or decipher filename:

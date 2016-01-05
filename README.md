@@ -81,14 +81,13 @@ df <- rlms_ipanel(wave=5:22, ~educ+father(educ)+spouse(income+educ)+ spouse(inco
 - [ ] проверить, есть ли особенности обработки модуля по женщинам 19 волны
 - [ ] унифицировать ДА, да, Да, etc в кодах переменных. опция
 
-- добавить в документацию примеры:
-- [ ] пример построения простой панели с fe/re/pooled
+- [ ] документация!!!! пример построения простой панели с fe/re/pooled
 
 
 
 ### English translation
 
-The `rlms`-package is designed to facilitate the processing of [RLMS data](http://www.hse.ru/rlms/) in  R. Current documentation refers to version 0.4. The package may be installed via:
+The `rlms`-package is designed to facilitate the processing of [RLMS data](http://www.hse.ru/rlms/) in  R. The package may be installed via:
 ```r
 install.packages("devtools")
 devtools::install_github("bdemeshev/rlms")
@@ -97,7 +96,7 @@ devtools::install_github("bdemeshev/rlms")
 Data may be loaded with one simple command:
 ```r
 library("rlms")
-df <- read.rlms("r21i_os24a.sav")
+df <- rlms_read("r21i_os24a.sav")
 ```
 
 The package automatically saves the metadata about variable full names:

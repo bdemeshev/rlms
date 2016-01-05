@@ -23,6 +23,7 @@ NULL
 read.rlms <- function(file, suppress = FALSE, nine2na = TRUE) {
   message("This function is deprecated. Please use rlms_read instead of.")
   df <- rlms_read(file = file, suppress = suppress, nine2na = nine2na)
+  return(df)
 }
 
 
@@ -55,7 +56,8 @@ rlms_read <- function(file, suppress = FALSE, nine2na = TRUE) {
 
   for (i in 1:ncol(df)) {
     value <- attr(df[, i], "value.labels")
-    if (length(value) > 0) { # NULL and numeric(0) are ignored
+    if (length(value) > 0) {
+      # NULL and numeric(0) are ignored
       vallabel <- names(value)
       attr(value, "names") <- NULL
       temp <- data.frame(value = value,
@@ -70,7 +72,7 @@ rlms_read <- function(file, suppress = FALSE, nine2na = TRUE) {
   # replace 99999996 for numeric variables
   if (nine2na) {
     for (i in 1:ncol(df)) {
-      if (class(df[, i])=="numeric") {
+      if (class(df[, i]) == "numeric") {
         df[, i] <- ifelse(df[, i] > 99999995, NA, df[, i])
       }
     }
@@ -87,7 +89,8 @@ rlms_read <- function(file, suppress = FALSE, nine2na = TRUE) {
 
   if (!suppress) {
     message("Variable labels: attr(df, 'var_meta'). Value labels: attr(df, 'value_meta').")
-    message("You may extract meta information now. Later some functions may destroy meta information. ")
+    message("You may extract meta information now.")
+    message("Later some functions may destroy meta information. ")
     message("This message may be turned off with option: suppress=TRUE. ")
   }
 
@@ -161,8 +164,10 @@ excel2date <- function(x) {
 rlms_fileinfo <- function(flist) {
   flist_short <- basename(flist) # transform filenames with path to short filenames
 
-  flist_sep <- stringr::str_match(flist_short, "r([0-9]{2})([ih])(all|_os)[a-zA-Z0-9]*.sav")
-  df <- data.frame(cbind(flist_short, matrix(flist_sep[, -1], ncol = 3)), stringsAsFactors = FALSE)
+  flist_sep <- stringr::str_match(flist_short,
+                  "r([0-9]{2})([ih])(all|_os)[a-zA-Z0-9]*.sav")
+  df <- data.frame(cbind(flist_short, matrix(flist_sep[, -1], ncol = 3)),
+                   stringsAsFactors = FALSE)
   # here we need to specify ncol=3 to correctly work with scalar flist
 
   names(df) <- c("file_short", "wave", "level", "sample")
@@ -232,7 +237,7 @@ rlms_sav2rds <- function(rlms_folder, flatten = TRUE) {
             ", wave: ", flist_info$wave[j],
             ", level: ", flist_info$level[j],
             ", sample: ", flist_info$sample[j],
-            ", ", (100*j) %/% length(flist_in), "% done")
+            ", ", (100 * j) %/% length(flist_in), "% done")
     temp <- read.rlms(flist_in[j], suppress = TRUE)
     saveRDS(temp, file=flist_out[j])
   }
@@ -261,7 +266,7 @@ rlms_load <- function(rlms_folder, wave,
   level <- match.arg(level)
   sample <- match.arg(sample)
 
-  if ((wave == 19) & (level == "reproductive")) {
+  if ( (wave == 19) & (level == "reproductive") ) {
        filename <- "r19PHv2"
   }  else {
       filename <- "r"
@@ -301,12 +306,13 @@ rlms_load <- function(rlms_folder, wave,
   rds_index <- stringr::str_detect(flist_rds, filename)
   sav_index <- stringr::str_detect(flist_sav, filename)
 
-  if (sum(rds_index)>0) { # if Rds file is present...
+  if (sum(rds_index) > 0) {
+    # if Rds file is present...
     df <- readRDS(flist_rds[rds_index]) # load it
-  } else { # load original .sav file
+  } else {
+    # load original .sav file
     df <- read.rlms(flist_sav[sav_index])
   }
 
   return(df)
 }
-

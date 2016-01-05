@@ -1,13 +1,14 @@
 Package: rlms
 Type: Package
-Title: RLMS-package: functions to facilitate loading and preprocessing rlms data
-Version: 0.4
+Title: RLMS-package: functions to facilitate loading and preprocessing of rlms data
+Version: 0.5
 Date: 2015-02-23
-Authors@R: c( person("Boris", "Demeshev", email = "boris.demeshev@gmail.com",
+Authors@R: c(person("Boris", "Demeshev", email = "boris.demeshev@gmail.com",
     role = "cre"))
 Description: RLMS-package: functions to facilitate loading and preprocessing
-    rlms data
+    of rlms data.
 Imports:
     stringr (>= 0.6.2),
+    foreign (>= 0.8-66),
     dplyr (>= 0.4)
-License: MIT
+License: GPL-2

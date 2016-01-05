@@ -136,4 +136,4 @@ Or decipher filename:
 rlms_fileinfo("r10hall23.sav")
 ```
 
-
+[![Travis-CI Build Status](https://travis-ci.org/bdemeshev/rlms.svg?branch=master)](https://travis-ci.org/bdemeshev/rlms)

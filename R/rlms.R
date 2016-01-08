@@ -106,6 +106,22 @@ rlms_read <- function(file,
     var_meta <- data.frame(var = names(df),
                            varlabel = varlabel,
                            stringsAsFactors = FALSE)
+    value_meta <- NULL
+    for (var in names(df)) {
+      value <- attr(df[[var]], "labels")
+      if (length(value) > 0) {
+        # NULL and numeric(0) are ignored
+        vallabel <- names(value)
+        # attr(value, "names") <- NULL
+        temp <- data.frame(value = value,
+                           vallabel = vallabel,
+                           var = var,
+                           stringsAsFactors = FALSE)
+        value_meta <- rbind(value_meta, temp)
+        # attr(df[, i], "value.labels") <- NULL
+      }
+    }
+
   }
 
   if (haven == "factor") {
@@ -143,27 +159,27 @@ rlms_read <- function(file,
   }
 
 
-  for (i in 1:ncol(df)) {
-    var_class <- class(df[, i])
+  for (var in names(df)) {
+    var_class <- class(df[[var]])
     if ((nine2na) & (var_class == "numeric")) {
       # replace 99999990+ for numeric variables
-      df[, i] <- ifelse(df[, i] > 99999990, NA, df[, i])
+      df[[var]] <- ifelse(df[[var]] > 99999990, NA, df[[var]])
     }
     if ((apostrophe) & (var_class == "factor")) {
       # trim apostrophes \\u2018 and \\u2019
-      levels(df[, i]) <- rlms_remove_apostrophe(levels(df[, i]))
+      levels(df[[var]]) <- rlms_remove_apostrophe(levels(df[[var]]))
     }
     if ((yesno) & (var_class == "factor")) {
       # convert yes/no to lowercase without apostrophes
-      levels(df[, i]) <- rlms_yesno_standartize(levels(df[, i]))
+      levels(df[[var]]) <- rlms_yesno_standartize(levels(df[[var]]))
     }
 
     # remove "" in levels
     if (var_class == "factor") {
-      if (sum(df[, i] == "", na.rm = TRUE) == 0) {
-        levels <- levels(df[, i])
+      if (sum(df[[var]] == "", na.rm = TRUE) == 0) {
+        levels <- levels(df[[var]])
         levels_new <- setdiff(levels, "")
-        df[, i] <- factor(df[, i], levels = levels_new)
+        df[[var]] <- factor(df[[var]], levels = levels_new)
       }
     }
   }

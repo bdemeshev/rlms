@@ -5,7 +5,7 @@
 \title{Read rlms data}
 \usage{
 rlms_read(file, suppress = FALSE, nine2na = TRUE, yesno = TRUE,
-  apostrophe = TRUE, haven = FALSE)
+  apostrophe = TRUE, haven = c("no", "labelled", "factor"))
 }
 \arguments{
 \item{file}{the filename}
@@ -18,7 +18,9 @@ rlms_read(file, suppress = FALSE, nine2na = TRUE, yesno = TRUE,
 
 \item{apostrophe}{trim apostrophes, TRUE by default}
 
-\item{haven}{use haven package, FALSE by default}
+\item{haven}{use haven package: "no" - (default) do not use "haven" package,
+"labelled" - return labelled variables,
+"factor" - return factor variables with meta information}
 }
 \value{
 dataframe

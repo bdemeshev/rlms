@@ -14,4 +14,6 @@ Imports:
     foreign (>= 0.8-66),
     haven (>= 0.2.0),
     dplyr (>= 0.4)
+Suggests:
+    sjmisc (>= 1.1)
 License: GPL-2

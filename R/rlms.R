@@ -79,7 +79,9 @@ rlms_yesno_standartize <- function(x) {
 #' Read rlms data and all the meta information. Destroy useless attributes.
 #'
 #' @param file the filename
-#' @param haven use haven package, FALSE by default
+#' @param haven use haven package: "no" - (default) do not use "haven" package,
+#' "labelled" - return labelled variables,
+#' "factor" - return factor variables with meta information
 #' @param yesno convert yes/no answers to lowercase yes/no without apostrophes
 #' @param apostrophe trim apostrophes, TRUE by default
 #' @param suppress logical, if true the default message is suppressed
@@ -93,38 +95,50 @@ rlms_read <- function(file,
                       nine2na = TRUE,
                       yesno = TRUE,
                       apostrophe = TRUE,
-                      haven = FALSE) {
+                      haven = c("no", "labelled", "factor")) {
 
-  if (haven) {
+  haven <- match.arg(haven) # check no/labelled/factor
+
+  if (haven == "labelled" | haven == "factor") {
     df <- haven::read_spss(file)
     # check the rest of the file with this option!
-  } else {
-    df <- foreign::read.spss(file, to.data.frame = TRUE, reencode = TRUE)
+    varlabel <- unlist(lapply(df, function(x) attr(x, "label")))
+    var_meta <- data.frame(var = names(df),
+                           varlabel = varlabel,
+                           stringsAsFactors = FALSE)
   }
-  attr(df, "codepage") <- NULL
 
-  # get variable labels
-  varlabel <- attr(df, "variable.labels")
-  names(varlabel) <- NULL
-  var_meta <- data.frame(var = names(df), varlabel = varlabel,
-                         stringsAsFactors = FALSE)
-  attr(df, "variable.labels") <- NULL
+  if (haven == "factor") {
 
-  # get value labels
-  value_meta <- NULL
+  }
 
-  for (i in 1:ncol(df)) {
-    value <- attr(df[, i], "value.labels")
-    if (length(value) > 0) {
-      # NULL and numeric(0) are ignored
-      vallabel <- names(value)
-      attr(value, "names") <- NULL
-      temp <- data.frame(value = value,
-                         vallabel = vallabel,
-                         var = names(df)[i],
-                         stringsAsFactors = FALSE)
-      value_meta <- rbind(value_meta, temp)
-      attr(df[, i], "value.labels") <- NULL
+  if (haven == "no") {
+    df <- foreign::read.spss(file, to.data.frame = TRUE, reencode = TRUE)
+    attr(df, "codepage") <- NULL
+
+    # get variable labels
+    varlabel <- attr(df, "variable.labels")
+    names(varlabel) <- NULL
+    var_meta <- data.frame(var = names(df), varlabel = varlabel,
+                           stringsAsFactors = FALSE)
+    attr(df, "variable.labels") <- NULL
+
+    # get value labels
+    value_meta <- NULL
+
+    for (i in 1:ncol(df)) {
+      value <- attr(df[, i], "value.labels")
+      if (length(value) > 0) {
+        # NULL and numeric(0) are ignored
+        vallabel <- names(value)
+        attr(value, "names") <- NULL
+        temp <- data.frame(value = value,
+                           vallabel = vallabel,
+                           var = names(df)[i],
+                           stringsAsFactors = FALSE)
+        value_meta <- rbind(value_meta, temp)
+        attr(df[, i], "value.labels") <- NULL
+      }
     }
   }
 
@@ -152,12 +166,12 @@ rlms_read <- function(file,
         df[, i] <- factor(df[, i], levels = levels_new)
       }
     }
-
   }
 
 
   # add wave-level-sample:
   fileinfo <- rlms_fileinfo(file)
+
   df$wave <- fileinfo$wave
   df$level <- fileinfo$level
   df$sample <- fileinfo$sample

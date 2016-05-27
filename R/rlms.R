@@ -140,29 +140,33 @@ rlms_read <- function(file,
       value <- attr(df[[var]], "labels")
       if (length(value) > 0) {
         # NULL and numeric(0) are ignored
+        
+        
+        
         vallabel <- names(value)
-
+        
+        
+        temp <- data.frame(value = value, vallabel = vallabel,
+                           var = var, stringsAsFactors = FALSE)
+        
+        
         # clean value labels
         if (apostrophe) {
-          vallabel <- rlms_remove_apostrophe(vallabel)
+          temp$vallabel <- rlms_remove_apostrophe(temp$vallabel)
         }
         if (yesno) {
-          vallabel <- rlms_yesno_standartize(vallabel)
+          temp$vallabel <- rlms_yesno_standartize(temp$vallabel)
         }
-        names(value) <- vallabel
+        
         if ((remove_empty) & (!"" %in% df[[var]])) {
           # remove "" in value labels
-          value <- value[!vallabel == ""]
+          # we play on the safe side and check that variable has no empty values
+          temp <- temp[!temp$vallabel == "", ]
         }
+        
+        names(temp$value) <- temp$vallabel # ? does it work ?
 
-        if (length(value) > 0) {
-          # the length = 0 arises if all values were removed during cleaning
-          temp <- data.frame(value = value,
-                             vallabel = vallabel,
-                             var = var,
-                             stringsAsFactors = FALSE)
-          value_meta <- rbind(value_meta, temp)
-        }
+        value_meta <- rbind(value_meta, temp)
       }
     }
 

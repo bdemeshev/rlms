@@ -155,12 +155,14 @@ rlms_read <- function(file,
           value <- value[!vallabel == ""]
         }
 
-
-        temp <- data.frame(value = value,
-                           vallabel = vallabel,
-                           var = var,
-                           stringsAsFactors = FALSE)
-        value_meta <- rbind(value_meta, temp)
+        if (length(value) > 0) {
+          # the length = 0 arises if all values were removed during cleaning
+          temp <- data.frame(value = value,
+                             vallabel = vallabel,
+                             var = var,
+                             stringsAsFactors = FALSE)
+          value_meta <- rbind(value_meta, temp)
+        }
       }
     }
 

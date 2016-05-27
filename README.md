@@ -19,13 +19,13 @@ df <- rlms_read("r21i_os24a.sav")
 
 Пакет автоматически сохраняет метаданные о названии переменных:
 ```r
-var_meta <- attr(df, "var_meta")
+var_meta <- rlms_show_variable_labels(df)
 head(var_meta)
 ```
 
-Метаданные об особых значениях:
+Метаданные о помеченных значениях:
 ```r
-value_meta <- attr(df, "value_meta")
+value_meta <- rlms_show_value_labels(df)
 head(value_meta)
 ```
 
@@ -102,13 +102,13 @@ df <- rlms_read("r21i_os24a.sav")
 
 The package automatically saves the metadata about variable full names:
 ```r
-var_meta <- attr(df, "var_meta")
+var_meta <- rlms_show_variable_labels(df)
 head(var_meta)
 ```
 
 Metadata on cathegory values:
 ```r
-value_meta <- attr(df, "value_meta")
+value_meta <- rlms_show_value_labels(df)
 head(value_meta)
 ```
 

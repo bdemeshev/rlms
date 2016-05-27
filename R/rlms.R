@@ -41,11 +41,38 @@ read.rlms <- function(file, suppress = FALSE, nine2na = TRUE) {
 #' @export
 #' @return character vector with apostrophes removed
 rlms_remove_apostrophe <- function(x) {
-  with_apostrophe <- stringr::str_detect(x, "^\\u2018.+\\u2019$")
-  x_new <- stringr::str_match(x, "^\\u2018(.+)\\u2019$")[, 2]
-  x_new[!with_apostrophe] <- x[!with_apostrophe]
+  x_new <- stringr::str_replace_all(x, "\\u2018", "")
+  x_new <- stringr::str_replace_all(x_new, "\\u2019.\\u2019", "")
+  x_new <- stringr::str_replace_all(x_new, "\\u2019", "")
   return(x_new)
 }
+
+#' Show variable labels
+#'
+#' Show variable labels
+#'
+#' Show variable labels
+#'
+#' @param df data.frame read from rlms file
+#' @export
+#' @return data frame with variable labels
+rlms_show_variable_labels <- function(df) {
+  return(attr(df, "var_meta"))
+}
+
+#' Show value labels
+#'
+#' Show value labels
+#'
+#' Show value labels
+#'
+#' @param df data.frame read from rlms file
+#' @export
+#' @return data frame with value labels
+rlms_show_value_labels <- function(df) {
+  return(attr(df, "value_meta"))
+}
+
 
 #' Standartize yes/no
 #'
@@ -84,6 +111,7 @@ rlms_yesno_standartize <- function(x) {
 #' "factor" - return factor variables with meta information
 #' @param yesno convert yes/no answers to lowercase yes/no without apostrophes
 #' @param apostrophe trim apostrophes, TRUE by default
+#' @param remove_empty remove empty labels, TRUE by default
 #' @param suppress logical, if true the default message is suppressed
 #' @param nine2na automatically convert 99999999 to NA for numeric variables
 #' @export
@@ -91,10 +119,11 @@ rlms_yesno_standartize <- function(x) {
 #' @examples
 #' # rlms_read("r21i_os24a.sav")
 rlms_read <- function(file,
-                      suppress = FALSE,
+                      suppress = TRUE,
                       nine2na = TRUE,
                       yesno = TRUE,
                       apostrophe = TRUE,
+                      remove_empty = TRUE,
                       haven = c("no", "labelled", "factor")) {
 
   haven <- match.arg(haven) # check no/labelled/factor
@@ -112,13 +141,26 @@ rlms_read <- function(file,
       if (length(value) > 0) {
         # NULL and numeric(0) are ignored
         vallabel <- names(value)
-        # attr(value, "names") <- NULL
+
+        # clean value labels
+        if (apostrophe) {
+          vallabel <- rlms_remove_apostrophe(vallabel)
+        }
+        if (yesno) {
+          vallabel <- rlms_yesno_standartize(vallabel)
+        }
+        names(value) <- vallabel
+        if ((remove_empty) & (!"" %in% df[[var]])) {
+          # remove "" in value labels
+          value <- value[!vallabel == ""]
+        }
+
+
         temp <- data.frame(value = value,
                            vallabel = vallabel,
                            var = var,
                            stringsAsFactors = FALSE)
         value_meta <- rbind(value_meta, temp)
-        # attr(df[, i], "value.labels") <- NULL
       }
     }
 

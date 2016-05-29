@@ -163,6 +163,9 @@ rlms_read <- function(file,
   }
 
   if (haven == "factor") {
+
+    message("The option haven = 'factor' is experimental and subject to change.")
+
     for (var in names(df)) {
       if (is_labelled(df[[var]])) { 
         # Rule 1: All labelled means factor
@@ -171,7 +174,6 @@ rlms_read <- function(file,
         }
         # Rule 2: All but one in the middle labelled means factor
         # Not implemented yet.
-        message("The option haven = 'factor' is experimental and subject to change.")
       } 
     }      
   }

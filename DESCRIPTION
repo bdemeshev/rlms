@@ -1,8 +1,8 @@
 Package: rlms
 Type: Package
 Title: Package to Facilitate Loading and Preprocessing of RLMS Data
-Version: 0.6
-Date: 2015-02-23
+Version: 0.7
+Date: 2016-05-29
 Authors@R: c(person("Boris", "Demeshev", email = "boris.demeshev@gmail.com",
     role = "cre"))
 Description: Functions to facilitate loading and preprocessing

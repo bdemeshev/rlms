@@ -23,7 +23,8 @@ rlms_read(file, suppress = TRUE, nine2na = TRUE, yesno = TRUE,
 
 \item{haven}{use haven package: "no" - (default) do not use "haven" package,
 "labelled" - return labelled variables,
-"factor" - return factor variables with meta information}
+"factor" - return factor or numeric variables,
+"numeric" - return numeric variables.}
 }
 \value{
 dataframe

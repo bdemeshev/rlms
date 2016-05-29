@@ -9,7 +9,7 @@ rlms_sav2rds(rlms_folder, flatten = TRUE)
 \arguments{
 \item{rlms_folder}{path to rlms data}
 
-\item{flatten}{logical, whether to flatten folder structure, default is TRUE}
+\item{flatten}{a logical value indicating whether to flatten folder structure, default is TRUE}
 }
 \value{
 nothing

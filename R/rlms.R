@@ -98,7 +98,6 @@ rlms_yesno_standartize <- function(x) {
 }
 
 
-
 #' Read rlms data
 #'
 #' Read rlms data and all meta information
@@ -108,7 +107,8 @@ rlms_yesno_standartize <- function(x) {
 #' @param file the filename
 #' @param haven use haven package: "no" - (default) do not use "haven" package,
 #' "labelled" - return labelled variables,
-#' "factor" - return factor variables with meta information
+#' "factor" - return factor or numeric variables,
+#' "numeric" - return numeric variables.
 #' @param yesno convert yes/no answers to lowercase yes/no without apostrophes
 #' @param apostrophe trim apostrophes, TRUE by default
 #' @param remove_empty remove empty labels, TRUE by default
@@ -128,7 +128,7 @@ rlms_read <- function(file,
 
   haven <- match.arg(haven) # check no/labelled/factor
 
-  if (haven == "labelled" | haven == "factor") {
+  if (!haven == "") {
     df <- haven::read_spss(file)
     # check the rest of the file with this option!
     varlabel <- unlist(lapply(df, function(x) attr(x, "label")))
@@ -150,21 +150,11 @@ rlms_read <- function(file,
                            var = var, stringsAsFactors = FALSE)
         
         
-        # clean value labels
-        if (apostrophe) {
-          temp$vallabel <- rlms_remove_apostrophe(temp$vallabel)
-        }
-        if (yesno) {
-          temp$vallabel <- rlms_yesno_standartize(temp$vallabel)
-        }
-        
         if ((remove_empty) & (!"" %in% df[[var]])) {
           # remove "" in value labels
           # we play on the safe side and check that variable has no empty values
           temp <- temp[!temp$vallabel == "", ]
         }
-        
-        names(temp$value) <- temp$vallabel # ? does it work ?
 
         value_meta <- rbind(value_meta, temp)
       }
@@ -173,7 +163,21 @@ rlms_read <- function(file,
   }
 
   if (haven == "factor") {
-
+    for (i in 1:ncol(df)) {
+      if (is_labelled(df[, i])) { 
+        # Rule 1: All labelled means factor
+        if (all_labelled(df[, i])) {
+          df[, i] <- haven::as_factor(df[, i])
+        }
+        # Rule 2: All but one in the middle labelled means factor
+        # Not implemented yet.
+        message("The option haven = 'factor' is experimental and subject to change.")
+      } 
+    }      
+  }
+  
+  if (haven == "numeric") {
+    df <- dplyr::mutate_each_(df, "as.numeric", vars = colnames(df))  
   }
 
   if (haven == "no") {
@@ -253,7 +257,8 @@ rlms_read <- function(file,
   attr(df, "value_meta") <- value_meta
 
   if (!suppress) {
-    message("Variable labels: attr(df, 'var_meta'). Value labels: attr(df, 'value_meta').")
+    message("Variable labels: rlms_show_variable_labels(df). ")
+    message("Value labels: rlms_show_value_labels(df). ")
     message("You may extract meta information now.")
     message("Later some functions may destroy meta information. ")
     message("This message may be turned off with option: suppress = TRUE. ")
@@ -378,7 +383,7 @@ rlms_hints <- function() {
 #' Convert all RLMS files from .sav to .Rds
 #'
 #' @param rlms_folder path to rlms data
-#' @param flatten logical, whether to flatten folder structure, default is TRUE
+#' @param flatten a logical value indicating whether to flatten folder structure, default is TRUE
 #' @return nothing
 #' @export
 #' @examples
@@ -405,7 +410,7 @@ rlms_sav2rds <- function(rlms_folder, flatten = TRUE) {
             ", sample: ", flist_info$sample[j],
             ", ", (100 * j) %/% length(flist_in), "% done")
     temp <- read.rlms(flist_in[j], suppress = TRUE)
-    saveRDS(temp, file=flist_out[j])
+    saveRDS(temp, file = flist_out[j])
   }
 }
 
@@ -482,3 +487,72 @@ rlms_load <- function(rlms_folder, wave,
 
   return(df)
 }
+
+
+
+
+#' Check whether the variable is labelled
+#'
+#' Check whether the variable is labelled
+#'
+#' Check whether the variable is labelled
+#'
+#' @param x a vector
+#' @export
+#' @return TRUE/FALSE
+is_labelled <- function(x) {
+  return(class(x) == "labelled")
+}
+
+
+#' Get unlabelled values of a labelled vector
+#'
+#' Get unlabelled values of a labelled vector
+#'
+#' Get unlabelled values of a labelled vector
+#'
+#' @param x a vector
+#' @param na.rm a logical value indicating whether NA values should be stripped
+#' @export
+#' @return vector of values without labels
+unlabelled_values <- function(x, na.rm = FALSE) {
+  if (is_labelled(x)) {
+    actual_values <- unique(x)
+    
+    if (na.rm) {
+      actual_values <- na.omit(actual_values)
+    }
+    
+    labelled_values <- attr(x, "labels")
+    unlabelled_values_answer <- setdiff(actual_values, labelled_values)
+  } else {
+    warning("The argument of `unlabelled_values` is not a labelled vector: zero length vector returned.")
+    unlabelled_values_answer <- setdiff(actual_values, actual_values)
+  }
+  
+  return(unlabelled_values_answer)
+}
+
+
+
+
+#' Check whether all values have labels
+#'
+#' Check whether all values have labels
+#'
+#' Check whether all non-NA values of a labelled variable have labels.
+#'
+#' @param x labelled vector
+#' @export
+#' @return TRUE/FALSE
+all_labelled <- function(x) {
+  if (is_labelled(x)) {
+    all_labelled_answer <- length(unlabelled_values(x)) == 0
+  } else {
+    warning("The argument of `all_labelled` is not a labelled vector: TRUE returned.")
+    all_labelled_answer <- TRUE
+  }
+  return(all_labelled_answer)
+}
+
+

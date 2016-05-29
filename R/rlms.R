@@ -163,11 +163,11 @@ rlms_read <- function(file,
   }
 
   if (haven == "factor") {
-    for (i in 1:ncol(df)) {
-      if (is_labelled(df[, i])) { 
+    for (var in names(df)) {
+      if (is_labelled(df[[var]])) { 
         # Rule 1: All labelled means factor
-        if (all_labelled(df[, i])) {
-          df[, i] <- haven::as_factor(df[, i])
+        if (all_labelled(df[[var]])) {
+          df[[var]] <- haven::as_factor(df[[var]])
         }
         # Rule 2: All but one in the middle labelled means factor
         # Not implemented yet.
@@ -177,7 +177,11 @@ rlms_read <- function(file,
   }
   
   if (haven == "numeric") {
-    df <- dplyr::mutate_each_(df, "as.numeric", vars = colnames(df))  
+    for (var in names(df)) {
+      if (is_labelled(df[[var]])) {
+        df[[var]] <- as.numeric(df[[var]])  
+      }
+    }
   }
 
   if (haven == "no") {

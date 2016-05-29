@@ -6,7 +6,7 @@
 \usage{
 rlms_read(file, suppress = TRUE, nine2na = TRUE, yesno = TRUE,
   apostrophe = TRUE, remove_empty = TRUE, haven = c("no", "labelled",
-  "factor"))
+  "factor", "numeric"))
 }
 \arguments{
 \item{file}{the filename}

@@ -124,7 +124,7 @@ rlms_read <- function(file,
                       yesno = TRUE,
                       apostrophe = TRUE,
                       remove_empty = TRUE,
-                      haven = c("no", "labelled", "factor")) {
+                      haven = c("no", "labelled", "factor", "numeric")) {
 
   haven <- match.arg(haven) # check no/labelled/factor
 

@@ -171,6 +171,8 @@ rlms_read <- function(file,
         # Rule 1: All labelled means factor
         if (all_labelled(df[[var]])) {
           df[[var]] <- haven::as_factor(df[[var]])
+        } else {
+          df[[var]] <- as.numeric(df[[var]])
         }
         # Rule 2: All but one in the middle labelled means factor
         # Not implemented yet.

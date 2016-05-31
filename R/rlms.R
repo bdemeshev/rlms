@@ -252,13 +252,13 @@ rlms_labelled2factor <- function(df) {
       } else if (all_but_one_labelled(df[[var]])) {
         # Rule 2: If all values but one in the middle are labelled then type is factor
         df[[var]] <- as_factor_safe(df[[var]])
-        message("Variable ", var, " was considered as factor: it has only one unlabelled value.")
+        message("Labelled variable ", var, " was considered as factor: it has only one unlabelled value.")
         message("This unlabelled value is neither minimal neither maximal.")
         
       } else if (min(unlabelled_values(df[[var]], na.rm = TRUE)) > 99999990) {
         # Rule 3: If all unlabelled values are NA codes then type is factor
         df[[var]] <- as_factor_safe(df[[var]]) 
-        message("Variable ", var, " was considered as factor: all unlabelled values are bigger than 99999990.")
+        message("Labelled variable ", var, " was considered as factor: all unlabelled values are bigger than 99999990.")
         
       } else {
         df[[var]] <- as.numeric(df[[var]])
@@ -827,6 +827,7 @@ all_but_one_labelled <- function(x) {
 #'
 #' Safe version of as_factor. This function keeps unlabelled values and 
 #' does not replace them with NA as `as_factor` in `haven` package.
+#' It also avoids "duplicated levels" warning.
 #'
 #' @param x labelled vector
 #' @export
@@ -839,7 +840,10 @@ as_factor_safe <- function(x) {
   names(new_labels) <- new_names
   attr(x, "labels") <- new_labels
   
-  x_factor <- haven::as_factor(x)
+  # this will throw warning for duplicate labels:
+  # x_factor <- haven::as_factor(x)
+  # so we use magic:
+  x_factor <- factor(names(new_labels[x]))
   
   return(x_factor)
 }

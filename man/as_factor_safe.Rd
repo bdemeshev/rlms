@@ -18,5 +18,6 @@ Safe version of as_factor.
 \details{
 Safe version of as_factor. This function keeps unlabelled values and 
 does not replace them with NA as `as_factor` in `haven` package.
+It also avoids "duplicated levels" warning.
 }
 

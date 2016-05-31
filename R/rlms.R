@@ -79,8 +79,11 @@ rlms_extract_value_labels <- function(df) {
   
   value_meta <- NULL
   for (var in names(df)) {
-    if (is_labelled(df[[var]])) {
-      value <- get_labels(df[[var]])
+    value <- get_labels(df[[var]])
+    
+    # sometimes class is "labelled" but there are no labels :)
+    if (length(value) > 0) {
+      # message(var)
       temp_value_meta <- data.frame(value = value, vallabel = names(value),
                          var = var, stringsAsFactors = FALSE, row.names = NULL)
       value_meta <- dplyr::bind_rows(value_meta, temp_value_meta)
@@ -170,8 +173,6 @@ rlms_cleanup <- function(df, suppress = TRUE,
   
   for (var in colnames(df)) {
     
-    
-    
     if (remove_empty) {
       # remove "" in value labels
       
@@ -180,10 +181,11 @@ rlms_cleanup <- function(df, suppress = TRUE,
       labels <- names(value_labels)
       values_with_empty_labels <- value_labels[labels == ""]
       
-      if (length(values_with_empty_labels)) {
+      if (length(values_with_empty_labels) > 0) {
         # we play on the safe side and check that variable has no empty values
         values_to_remove <- setdiff(values_with_empty_labels, unique(df[[var]]))
-        attr(df[[var]], "labels") <- setdiff(value_labels, values_to_remove)
+        # setdiff kills names 
+        attr(df[[var]], "labels") <- value_labels[!value_labels %in% values_to_remove]
       }
     }
     

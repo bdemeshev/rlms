@@ -392,11 +392,12 @@ rlms_hints <- function() {
 #'
 #' @param rlms_folder path to rlms data
 #' @param flatten a logical value indicating whether to flatten folder structure, default is TRUE
+#' @param ... arguments passed to rlms_read
 #' @return nothing
 #' @export
 #' @examples
 #' # rlms_sav2rds("~/Documents/rlms_data/")
-rlms_sav2rds <- function(rlms_folder, flatten = TRUE) {
+rlms_sav2rds <- function(rlms_folder = getwd(), flatten = TRUE, ...) {
   # remove trailing "/" if present
   if (stringr::str_sub(rlms_folder, start = -1) == "/") {
     rlms_folder <- stringr::str_sub(rlms_folder, end = -2)
@@ -408,7 +409,9 @@ rlms_sav2rds <- function(rlms_folder, flatten = TRUE) {
   flist_info <- rlms_fileinfo(flist_in)
 
   flist_out <- stringr::str_replace(flist_in, ".sav", ".Rds")
-  if (flatten) flist_out <- paste0(rlms_folder, "/", basename(flist_out)) # remove path if we flatten folder structure
+  if (flatten) {
+    flist_out <- paste0(rlms_folder, "/", basename(flist_out)) # remove path if we flatten folder structure
+  }
 
 
   for (j in 1:length(flist_in)) {
@@ -417,7 +420,7 @@ rlms_sav2rds <- function(rlms_folder, flatten = TRUE) {
             ", level: ", flist_info$level[j],
             ", sample: ", flist_info$sample[j],
             ", ", (100 * j) %/% length(flist_in), "% done")
-    temp <- read.rlms(flist_in[j], suppress = TRUE)
+    temp <- rlms_read(flist_in[j], ...)
     saveRDS(temp, file = flist_out[j])
   }
 }
@@ -435,13 +438,14 @@ rlms_sav2rds <- function(rlms_folder, flatten = TRUE) {
 #' @param rlms_folder path to rlms data
 #' @param level the level (individual/household/reproductive)
 #' @param sample the sample (all/representative)
+#' @param ... arguments passed to rlms_read
 #' @return data.frame with RLMS data
 #' @export
 #' @examples
 #' # rlms_load("~/Documents/rlms_data/", wave = 20, level = "individual", sample = "rep" )
-rlms_load <- function(rlms_folder, wave,
-                         level=c("individual", "household", "reproductive"),
-                         sample=c("all", "representative")) {
+rlms_load <- function(rlms_folder = getwd(), wave,
+                         level = c("individual", "household", "reproductive"),
+                         sample = c("all", "representative"), ...) {
   level <- match.arg(level)
   sample <- match.arg(sample)
 
@@ -490,7 +494,7 @@ rlms_load <- function(rlms_folder, wave,
     df <- readRDS(flist_rds[rds_index]) # load it
   } else {
     # load original .sav file
-    df <- read.rlms(flist_sav[sav_index])
+    df <- rlms_read(flist_sav[sav_index], ...)
   }
 
   return(df)

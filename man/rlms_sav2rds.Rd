@@ -4,12 +4,14 @@
 \alias{rlms_sav2rds}
 \title{Convert all RLMS files from .sav to .Rds}
 \usage{
-rlms_sav2rds(rlms_folder, flatten = TRUE)
+rlms_sav2rds(rlms_folder = getwd(), flatten = TRUE, ...)
 }
 \arguments{
 \item{rlms_folder}{path to rlms data}
 
 \item{flatten}{a logical value indicating whether to flatten folder structure, default is TRUE}
+
+\item{...}{arguments passed to rlms_read}
 }
 \value{
 nothing

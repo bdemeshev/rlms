@@ -4,8 +4,8 @@
 \alias{rlms_load}
 \title{Load RLMS data of specified wave/level/sample}
 \usage{
-rlms_load(rlms_folder, wave, level = c("individual", "household",
-  "reproductive"), sample = c("all", "representative"))
+rlms_load(rlms_folder = getwd(), wave, level = c("individual", "household",
+  "reproductive"), sample = c("all", "representative"), ...)
 }
 \arguments{
 \item{rlms_folder}{path to rlms data}
@@ -15,6 +15,8 @@ rlms_load(rlms_folder, wave, level = c("individual", "household",
 \item{level}{the level (individual/household/reproductive)}
 
 \item{sample}{the sample (all/representative)}
+
+\item{...}{arguments passed to rlms_read}
 }
 \value{
 data.frame with RLMS data

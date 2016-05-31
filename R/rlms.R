@@ -185,7 +185,7 @@ rlms_read <- function(file,
           message("Variable ", var, " was considered as factor: it has only one unlabelled value.")
           message("This unlabelled value is neither minimal neither maximal.")
           
-        } else if (min(unlabelled_values(df[[var]])) > 99999990) {
+        } else if (min(unlabelled_values(df[[var]], na.rm = TRUE)) > 99999990) {
           # Rule 3: If all unlabelled values are NA codes then type is factor
           df[[var]] <- as_factor_safe(df[[var]]) 
           message("Variable ", var, " was considered as factor: all unlabelled values are bigger than 99999990.")

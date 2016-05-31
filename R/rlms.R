@@ -664,7 +664,7 @@ all_but_one_labelled <- function(x) {
 #' @return TRUE/FALSE
 as_factor_safe <- function(x) {
   old_labels <- attr(x, "labels")
-  unlabelled_x <- unlabelled_values(x)
+  unlabelled_x <- unlabelled_values(x, na.rm = TRUE)
   new_labels <- c(old_labels, unlabelled_x)
   new_names <- c(names(old_labels), unlabelled_x)
   names(new_labels) <- new_names

@@ -131,7 +131,7 @@ rlms_read <- function(file,
 
   haven <- match.arg(haven) # check no/labelled/factor
 
-  if (!haven == "") {
+  if (!haven == "no") {
     df <- haven::read_spss(file)
     # check the rest of the file with this option!
     varlabel <- unlist(lapply(df, function(x) attr(x, "label")))
@@ -170,24 +170,42 @@ rlms_read <- function(file,
     message("The option haven = 'factor' is experimental and subject to change.")
 
     for (var in names(df)) {
+      # preserve variable label: it will show automatically in Rstudio
+      variable_label <- attr(df[[var]], "label")
+      
       if (is_labelled(df[[var]])) { 
-        # Rule 1: All labelled means factor
         if (all_labelled(df[[var]])) {
+          # Rule 1: If all values are labelled then type is factor
           df[[var]] <- haven::as_factor(df[[var]])
+          
+        } else if (all_but_one_labelled(df[[var]])) {
+          # Rule 2: If all values but one in the middle are labelled then type is factor
+          df[[var]] <- as_factor_safe(df[[var]])
+          message("Variable ", var, " was considered as factor: it has only one unlabelled value.")
+          message("This unlabelled value is neither minimal neither maximal.")
+          
+        } else if (min(unlabelled_values(df[[var]])) > 99999990) {
+          # Rule 3: If all unlabelled values are NA codes then type is factor
+          df[[var]] <- as_factor_safe(df[[var]]) 
+          message("Variable ", var, " was considered as factor: all unlabelled values are bigger than 99999990.")
+         
         } else {
           df[[var]] <- as.numeric(df[[var]])
         }
-        # Rule 2: All but one in the middle labelled means factor
-        # Not implemented yet.
       } 
+      
+      attr(df[[var]], "label") <- variable_label
     }      
   }
   
   if (haven == "numeric") {
     for (var in names(df)) {
+      # preserve variable label: it will show automatically in Rstudio
+      variable_label <- attr(df[[var]], "label") 
       if (is_labelled(df[[var]])) {
         df[[var]] <- as.numeric(df[[var]])  
       }
+      attr(df[[var]], "label") <- variable_label
     }
   }
 
@@ -600,6 +618,59 @@ all_labelled <- function(x) {
     all_labelled_answer <- TRUE
   }
   return(all_labelled_answer)
+}
+
+
+
+#' Check whether all values but one in the middle have labels
+#'
+#' Check whether all values but one in the middle have labels
+#'
+#' Check whether all non-NA but one in the middle values of a labelled variable have labels.
+#'
+#' @param x labelled vector
+#' @export
+#' @return TRUE/FALSE
+all_but_one_labelled <- function(x) {
+  
+  all_but_one_labelled_answer <- FALSE
+  
+  if (is_labelled(x)) {
+    unlabelled_x <- unlabelled_values(x)
+    labelled_x <- labelled_values(x)
+    if (length(unlabelled_x) == 1) {
+      if (unlabelled_x > min(labelled_x) & unlabelled_x < max(labelled_x)) {
+        all_but_one_labelled_answer <- TRUE  
+      }
+    }
+
+  } else {
+    warning("The argument of `all_labelled` is not a labelled vector: FALSE returned.")
+  }
+  return(all_but_one_labelled_answer)
+}
+
+#' Safe version of as_factor.
+#'
+#' Safe version of as_factor.
+#'
+#' Safe version of as_factor. This function keeps unlabelled values and 
+#' does not replace them with NA as `as_factor` in `haven` package.
+#'
+#' @param x labelled vector
+#' @export
+#' @return TRUE/FALSE
+as_factor_safe <- function(x) {
+  old_labels <- attr(x, "labels")
+  unlabelled_x <- unlabelled_values(x)
+  new_labels <- c(old_labels, unlabelled_x)
+  new_names <- c(names(old_labels), unlabelled_x)
+  names(new_labels) <- new_names
+  attr(x, "labels") <- new_labels
+  
+  x_factor <- haven::as_factor(x)
+  
+  return(x_factor)
 }
 
 

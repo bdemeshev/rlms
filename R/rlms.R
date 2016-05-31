@@ -171,6 +171,7 @@ rlms_read <- function(file,
 
     for (var in names(df)) {
       # preserve variable label: it will show automatically in Rstudio
+      message(var)
       variable_label <- attr(df[[var]], "label")
       
       if (is_labelled(df[[var]])) { 
@@ -636,8 +637,8 @@ all_but_one_labelled <- function(x) {
   all_but_one_labelled_answer <- FALSE
   
   if (is_labelled(x)) {
-    unlabelled_x <- unlabelled_values(x)
-    labelled_x <- labelled_values(x)
+    unlabelled_x <- unlabelled_values(x, na.rm = TRUE)
+    labelled_x <- labelled_values(x, na.rm = TRUE)
     if (length(unlabelled_x) == 1) {
       if (unlabelled_x > min(labelled_x) & unlabelled_x < max(labelled_x)) {
         all_but_one_labelled_answer <- TRUE  

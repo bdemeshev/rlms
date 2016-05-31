@@ -1,3 +1,7 @@
+# rlms 0.72
+* more intelligent transformation of labelled variables into factor variables.
+* new function `as_factor_safe()`, `all_but_one_labelled()`
+
 # rlms 0.71
 * added option `colnames_tolower = TRUE` to the function `rlms_read()`
 * default folder and option passing in `rlms_load()` and `rlms_sav2rds()`

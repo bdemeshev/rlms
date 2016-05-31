@@ -3,6 +3,7 @@
 export(all_labelled)
 export(excel2date)
 export(is_labelled)
+export(labelled_values)
 export(read.rlms)
 export(rlms_fileinfo)
 export(rlms_hints)

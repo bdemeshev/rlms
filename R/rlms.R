@@ -114,6 +114,8 @@ rlms_yesno_standartize <- function(x) {
 #' @param remove_empty remove empty labels, TRUE by default
 #' @param suppress logical, if true the default message is suppressed
 #' @param nine2na automatically convert 99999999 to NA for numeric variables
+#' @param colnames_tolower a logical value, indicating whether variable names should be converted to lowercase.
+#' TRUE by default.
 #' @export
 #' @return dataframe
 #' @examples
@@ -124,6 +126,7 @@ rlms_read <- function(file,
                       yesno = TRUE,
                       apostrophe = TRUE,
                       remove_empty = TRUE,
+                      colnames_tolower = TRUE,
                       haven = c("no", "labelled", "factor", "numeric")) {
 
   haven <- match.arg(haven) # check no/labelled/factor
@@ -272,6 +275,9 @@ rlms_read <- function(file,
     message("This message may be turned off with option: suppress = TRUE. ")
   }
 
+  if (colnames_tolower) {
+    colnames(df) <- stringr::str_to_lower(colnames(df))
+  }
 
   # to avoid long waiting time for occasional "df + enter":
   df <- dplyr::as.tbl(df)
@@ -538,13 +544,42 @@ unlabelled_values <- function(x, na.rm = FALSE) {
     labelled_values <- attr(x, "labels")
     unlabelled_values_answer <- setdiff(actual_values, labelled_values)
   } else {
-    warning("The argument of `unlabelled_values` is not a labelled vector: zero length vector returned.")
-    unlabelled_values_answer <- setdiff(actual_values, actual_values)
+    warning("The argument of `unlabelled_values` is not a labelled vector: NULL returned.")
+    unlabelled_values_answer <- NULL
   }
   
   return(unlabelled_values_answer)
 }
 
+
+#' Get labelled values of a labelled vector
+#'
+#' Get labelled values of a labelled vector
+#'
+#' Get labelled values of a labelled vector
+#'
+#' @param x a vector
+#' @param na.rm a logical value indicating whether NA values should be stripped.
+#' Normally NA is not labelled and is not returned even with na.rm = FALSE.
+#' @export
+#' @return vector of values with labels
+labelled_values <- function(x, na.rm = FALSE) {
+  if (is_labelled(x)) {
+    actual_values <- unique(x)
+    
+    if (na.rm) {
+      actual_values <- na.omit(actual_values)
+    }
+    
+    labelled_values <- attr(x, "labels")
+    labelled_values_answer <- actual_values[actual_values %in% labelled_values]
+  } else {
+    warning("The argument of `unlabelled_values` is not a labelled vector: NULL returned.")
+    labelled_values_answer <- NULL
+  }
+  
+  return(labelled_values_answer)
+}
 
 
 

@@ -1,6 +1,12 @@
+# rlms 0.71
+* added option `colnames_tolower = TRUE` to the function `rlms_read()`
+* default folder and option passing in `rlms_load()` and `rlms_sav2rds()`
+* new function `labelled_values()`
+
 # rlms 0.7
 * added option `haven = "numeric"` to the function `rlms_read()`
 * added experimental version of `haven = "factor"` to the function `rlms_read()`
+* new functions: `all_labelled()`, `unlabelled_values`, `is_labelled()`
 
 # rlms 0.6
 * added functions `rlms_show_variable_labels()`, `rlms_show_value_labels()`

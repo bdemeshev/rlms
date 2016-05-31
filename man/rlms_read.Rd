@@ -5,8 +5,8 @@
 \title{Read rlms data}
 \usage{
 rlms_read(file, suppress = TRUE, nine2na = TRUE, yesno = TRUE,
-  apostrophe = TRUE, remove_empty = TRUE, haven = c("no", "labelled",
-  "factor", "numeric"))
+  apostrophe = TRUE, remove_empty = TRUE, colnames_tolower = TRUE,
+  haven = c("no", "labelled", "factor", "numeric"))
 }
 \arguments{
 \item{file}{the filename}
@@ -20,6 +20,9 @@ rlms_read(file, suppress = TRUE, nine2na = TRUE, yesno = TRUE,
 \item{apostrophe}{trim apostrophes, TRUE by default}
 
 \item{remove_empty}{remove empty labels, TRUE by default}
+
+\item{colnames_tolower}{a logical value, indicating whether variable names should be converted to lowercase.
+TRUE by default.}
 
 \item{haven}{use haven package: "no" - (default) do not use "haven" package,
 "labelled" - return labelled variables,

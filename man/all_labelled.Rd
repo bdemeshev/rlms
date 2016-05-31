@@ -4,10 +4,12 @@
 \alias{all_labelled}
 \title{Check whether all values have labels}
 \usage{
-all_labelled(x)
+all_labelled(x, na.rm = TRUE)
 }
 \arguments{
 \item{x}{labelled vector}
+
+\item{na.rm}{a logical value indicating whether NA values should be stripped. TRUE by default}
 }
 \value{
 TRUE/FALSE
@@ -16,6 +18,6 @@ TRUE/FALSE
 Check whether all values have labels
 }
 \details{
-Check whether all non-NA values of a labelled variable have labels.
+Check whether all values of a labelled variable have labels.
 }
 

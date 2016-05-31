@@ -606,14 +606,15 @@ labelled_values <- function(x, na.rm = FALSE) {
 #'
 #' Check whether all values have labels
 #'
-#' Check whether all non-NA values of a labelled variable have labels.
+#' Check whether all values of a labelled variable have labels.
 #'
 #' @param x labelled vector
+#' @param na.rm a logical value indicating whether NA values should be stripped. TRUE by default
 #' @export
 #' @return TRUE/FALSE
-all_labelled <- function(x) {
+all_labelled <- function(x, na.rm = TRUE) {
   if (is_labelled(x)) {
-    all_labelled_answer <- length(unlabelled_values(x)) == 0
+    all_labelled_answer <- length(unlabelled_values(x, na.rm = na.rm)) == 0
   } else {
     warning("The argument of `all_labelled` is not a labelled vector: TRUE returned.")
     all_labelled_answer <- TRUE

@@ -47,6 +47,50 @@ rlms_remove_apostrophe <- function(x) {
   return(x_new)
 }
 
+
+#' Extract variable labels
+#'
+#' Extract variable labels
+#'
+#' Extract variable labels
+#'
+#' @param df data.frame read from rlms file
+#' @export
+#' @return data frame with variable labels
+rlms_extract_variable_labels <- function(df) {
+  varlabel <- unlist(lapply(df, function(x) attr(x, "label")))
+  var_meta <- data.frame(var = names(df),
+                         varlabel = varlabel,
+                         stringsAsFactors = FALSE)
+  
+  return(var_meta)
+}
+
+#' Extract value labels
+#'
+#' Extract value labels
+#'
+#' Extract value labels
+#'
+#' @param df data.frame read from rlms file
+#' @export
+#' @return data frame with value labels
+rlms_extract_value_labels <- function(df) {
+  
+  value_meta <- NULL
+  for (var in names(df)) {
+    if (is_labelled(df[[var]])) {
+      value <- get_labels(df[[var]])
+      temp_value_meta <- data.frame(value = value, vallabel = names(value),
+                         var = var, stringsAsFactors = FALSE, row.names = NULL)
+      value_meta <- dplyr::bind_rows(value_meta, temp_value_meta)
+    }  
+  }
+  
+  return(value_meta)
+}
+
+
 #' Show variable labels
 #'
 #' Show variable labels
@@ -97,18 +141,141 @@ rlms_yesno_standartize <- function(x) {
   return(x_new)
 }
 
+#' Clean rlms data
+#'
+#' Clean rlms data and all meta information
+#'
+#' Clean rlms data and all the meta information. Destroy useless attributes.
+#'
+#' @param df data.frame read by haven::read.spss
+#' @param yesno convert yes/no answers to lowercase yes/no without apostrophes
+#' @param apostrophe trim apostrophes, TRUE by default
+#' @param remove_empty remove empty labels, TRUE by default
+#' @param suppress logical, if true the default message is suppressed
+#' @param nine2na automatically convert 99999999 to NA for numeric variables
+#' @param colnames_tolower a logical value, indicating whether variable names should be converted to lowercase.
+#' TRUE by default.
+#' @export
+#' @return dataframe
+rlms_cleanup <- function(df, suppress = TRUE,
+                         nine2na = TRUE,
+                         yesno = TRUE,
+                         apostrophe = TRUE,
+                         remove_empty = TRUE,
+                         colnames_tolower = TRUE) {
+  
+  if (colnames_tolower) {
+    colnames(df) <- stringr::str_to_lower(colnames(df))
+  }
+  
+  for (var in colnames(df)) {
+    
+    
+    
+    if (remove_empty) {
+      # remove "" in value labels
+      
+      value_labels <- get_labels(df[[var]])
+      
+      labels <- names(value_labels)
+      values_with_empty_labels <- value_labels[labels == ""]
+      
+      if (length(values_with_empty_labels)) {
+        # we play on the safe side and check that variable has no empty values
+        values_to_remove <- setdiff(values_with_empty_labels, unique(df[[var]]))
+        attr(df[[var]], "labels") <- setdiff(value_labels, values_to_remove)
+      }
+    }
+    
+    
+    
+  }
+  
+  return(df)
+}
 
-#' Read rlms data
+#' Transform all labelled variables into numeric
 #'
-#' Read rlms data and all meta information
+#' Transform all labelled variables into numeric
 #'
-#' Read rlms data and all the meta information. Destroy useless attributes.
+#' Transform all labelled variables into numeric
+#'
+#' @param df data.frame with labelled variables
+#' @export
+#' @return df data.frame with numeric variables instead of labelled
+#' @examples 
+#' df_labelled <- data.frame(x = haven::labelled(c(1, 1, 2, NA), c(Male = 1, Female = 2)), y = 1:4)
+#' df_new <- rlms_labelled2numeric(df_labelled)
+rlms_labelled2numeric <- function(df) {
+  for (var in names(df)) {
+    if (is_labelled(df[[var]])) {
+      # preserve variable label: it will show automatically in Rstudio
+      variable_label <- attr(df[[var]], "label")
+      
+      df[[var]] <- as.numeric(df[[var]])  
+      
+      attr(df[[var]], "label") <- variable_label
+    }
+  }
+  return(df)  
+}
+
+#' Transform all labelled variables into factor or numeric
+#'
+#' Transform all labelled variables into factor or numeric
+#'
+#' Transform all labelled variables into factor or numeric
+#'
+#' @param df data.frame with labelled variables
+#' @export
+#' @return df data.frame with factor or numeric variables instead of labelled
+#' @examples 
+#' df_labelled <- data.frame(x = haven::labelled(c(1, 1, 2, NA), c(Male = 1, Female = 2)), y = 1:4)
+#' df_new <- rlms_labelled2factor(df_labelled)
+rlms_labelled2factor <- function(df) {
+  
+  message("The option haven = 'factor' is experimental and subject to change.")
+  
+  
+  for (var in names(df)) {
+    # preserve variable label: it will show automatically in Rstudio
+    # message(var)
+    variable_label <- attr(df[[var]], "label")
+    
+    if (is_labelled(df[[var]])) { 
+      if (all_labelled(df[[var]])) {
+        # Rule 1: If all values are labelled then type is factor
+        df[[var]] <- haven::as_factor(df[[var]])
+        
+      } else if (all_but_one_labelled(df[[var]])) {
+        # Rule 2: If all values but one in the middle are labelled then type is factor
+        df[[var]] <- as_factor_safe(df[[var]])
+        message("Variable ", var, " was considered as factor: it has only one unlabelled value.")
+        message("This unlabelled value is neither minimal neither maximal.")
+        
+      } else if (min(unlabelled_values(df[[var]], na.rm = TRUE)) > 99999990) {
+        # Rule 3: If all unlabelled values are NA codes then type is factor
+        df[[var]] <- as_factor_safe(df[[var]]) 
+        message("Variable ", var, " was considered as factor: all unlabelled values are bigger than 99999990.")
+        
+      } else {
+        df[[var]] <- as.numeric(df[[var]])
+      }
+    } 
+    
+    attr(df[[var]], "label") <- variable_label
+  }    
+  return(df)  
+}
+
+
+#' Read rlms data, old legacy code
+#'
+#' Read rlms data and all meta information, old legacy code
+#'
+#' Read rlms data and all the meta information. Destroy useless attributes, old legacy code
 #'
 #' @param file the filename
-#' @param haven use haven package: "no" - (default) do not use "haven" package,
-#' "labelled" - return labelled variables,
-#' "factor" - return factor or numeric variables,
-#' "numeric" - return numeric variables.
 #' @param yesno convert yes/no answers to lowercase yes/no without apostrophes
 #' @param apostrophe trim apostrophes, TRUE by default
 #' @param remove_empty remove empty labels, TRUE by default
@@ -119,128 +286,42 @@ rlms_yesno_standartize <- function(x) {
 #' @export
 #' @return dataframe
 #' @examples
-#' # rlms_read("r21i_os24a.sav")
-rlms_read <- function(file,
+#' # rlms_legacy_read("r21i_os24a.sav")
+rlms_legacy_read <- function(file,
                       suppress = TRUE,
                       nine2na = TRUE,
                       yesno = TRUE,
                       apostrophe = TRUE,
                       remove_empty = TRUE,
-                      colnames_tolower = TRUE,
-                      haven = c("no", "labelled", "factor", "numeric")) {
-
-  haven <- match.arg(haven) # check no/labelled/factor
-
-  if (!haven == "no") {
-    df <- haven::read_spss(file)
-    # check the rest of the file with this option!
-    varlabel <- unlist(lapply(df, function(x) attr(x, "label")))
-    var_meta <- data.frame(var = names(df),
-                           varlabel = varlabel,
-                           stringsAsFactors = FALSE)
-    value_meta <- NULL
-    for (var in names(df)) {
-      value <- attr(df[[var]], "labels")
-      if (length(value) > 0) {
-        # NULL and numeric(0) are ignored
-        
-        
-        
-        vallabel <- names(value)
-        
-        
-        temp <- data.frame(value = value, vallabel = vallabel,
-                           var = var, stringsAsFactors = FALSE)
-        
-        
-        if ((remove_empty) & (!"" %in% df[[var]])) {
-          # remove "" in value labels
-          # we play on the safe side and check that variable has no empty values
-          temp <- temp[!temp$vallabel == "", ]
-        }
-
-        value_meta <- rbind(value_meta, temp)
-      }
+                      colnames_tolower = TRUE) {
+  df <- foreign::read.spss(file, to.data.frame = TRUE, reencode = TRUE)
+  attr(df, "codepage") <- NULL
+  
+  # get variable labels
+  varlabel <- attr(df, "variable.labels")
+  names(varlabel) <- NULL
+  var_meta <- data.frame(var = names(df), varlabel = varlabel,
+                         stringsAsFactors = FALSE)
+  attr(df, "variable.labels") <- NULL
+  
+  # get value labels
+  value_meta <- NULL
+  
+  for (i in 1:ncol(df)) {
+    value <- attr(df[, i], "value.labels")
+    if (length(value) > 0) {
+      # NULL and numeric(0) are ignored
+      vallabel <- names(value)
+      attr(value, "names") <- NULL
+      temp <- data.frame(value = value,
+                         vallabel = vallabel,
+                         var = names(df)[i],
+                         stringsAsFactors = FALSE)
+      value_meta <- rbind(value_meta, temp)
+      attr(df[, i], "value.labels") <- NULL
     }
-
-  }
-
-  if (haven == "factor") {
-
-    message("The option haven = 'factor' is experimental and subject to change.")
-
-    for (var in names(df)) {
-      # preserve variable label: it will show automatically in Rstudio
-      message(var)
-      variable_label <- attr(df[[var]], "label")
-      
-      if (is_labelled(df[[var]])) { 
-        if (all_labelled(df[[var]])) {
-          # Rule 1: If all values are labelled then type is factor
-          df[[var]] <- haven::as_factor(df[[var]])
-          
-        } else if (all_but_one_labelled(df[[var]])) {
-          # Rule 2: If all values but one in the middle are labelled then type is factor
-          df[[var]] <- as_factor_safe(df[[var]])
-          message("Variable ", var, " was considered as factor: it has only one unlabelled value.")
-          message("This unlabelled value is neither minimal neither maximal.")
-          
-        } else if (min(unlabelled_values(df[[var]], na.rm = TRUE)) > 99999990) {
-          # Rule 3: If all unlabelled values are NA codes then type is factor
-          df[[var]] <- as_factor_safe(df[[var]]) 
-          message("Variable ", var, " was considered as factor: all unlabelled values are bigger than 99999990.")
-         
-        } else {
-          df[[var]] <- as.numeric(df[[var]])
-        }
-      } 
-      
-      attr(df[[var]], "label") <- variable_label
-    }      
   }
   
-  if (haven == "numeric") {
-    for (var in names(df)) {
-      # preserve variable label: it will show automatically in Rstudio
-      variable_label <- attr(df[[var]], "label") 
-      if (is_labelled(df[[var]])) {
-        df[[var]] <- as.numeric(df[[var]])  
-      }
-      attr(df[[var]], "label") <- variable_label
-    }
-  }
-
-  if (haven == "no") {
-    df <- foreign::read.spss(file, to.data.frame = TRUE, reencode = TRUE)
-    attr(df, "codepage") <- NULL
-
-    # get variable labels
-    varlabel <- attr(df, "variable.labels")
-    names(varlabel) <- NULL
-    var_meta <- data.frame(var = names(df), varlabel = varlabel,
-                           stringsAsFactors = FALSE)
-    attr(df, "variable.labels") <- NULL
-
-    # get value labels
-    value_meta <- NULL
-
-    for (i in 1:ncol(df)) {
-      value <- attr(df[, i], "value.labels")
-      if (length(value) > 0) {
-        # NULL and numeric(0) are ignored
-        vallabel <- names(value)
-        attr(value, "names") <- NULL
-        temp <- data.frame(value = value,
-                           vallabel = vallabel,
-                           var = names(df)[i],
-                           stringsAsFactors = FALSE)
-        value_meta <- rbind(value_meta, temp)
-        attr(df[, i], "value.labels") <- NULL
-      }
-    }
-  }
-
-
   for (var in names(df)) {
     var_class <- class(df[[var]])
     if ((nine2na) & (var_class == "numeric")) {
@@ -255,7 +336,7 @@ rlms_read <- function(file,
       # convert yes/no to lowercase without apostrophes
       levels(df[[var]]) <- rlms_yesno_standartize(levels(df[[var]]))
     }
-
+    
     # remove "" in levels
     if (var_class == "factor") {
       if (sum(df[[var]] == "", na.rm = TRUE) == 0) {
@@ -264,6 +345,79 @@ rlms_read <- function(file,
         df[[var]] <- factor(df[[var]], levels = levels_new)
       }
     }
+  }
+  
+  if (yesno) {
+    value_meta <-
+      dplyr::mutate(value_meta, vallabel = rlms_yesno_standartize(vallabel))
+  }
+  if (apostrophe) {
+    value_meta <-
+      dplyr::mutate(value_meta, vallabel = rlms_remove_apostrophe(vallabel))
+  }
+  
+  # add wave-level-sample:
+  fileinfo <- rlms_fileinfo(file)
+  
+  df$wave <- fileinfo$wave
+  df$level <- fileinfo$level
+  df$sample <- fileinfo$sample
+  
+  
+  attr(df, "var_meta") <- var_meta
+  attr(df, "value_meta") <- value_meta
+  
+  if (!suppress) {
+    message("Variable labels: rlms_show_variable_labels(df). ")
+    message("Value labels: rlms_show_value_labels(df). ")
+    message("You may extract meta information now.")
+    message("Later some functions may destroy meta information. ")
+    message("This message may be turned off with option: suppress = TRUE. ")
+  }
+  
+  
+  # to avoid long waiting time for occasional "df + enter":
+  df <- dplyr::as.tbl(df)
+  
+  return(df)  
+}
+
+
+#' Read rlms data
+#'
+#' Read rlms data and all meta information
+#'
+#' Read rlms data and all the meta information. Destroy useless attributes.
+#'
+#' @param file the filename
+#' @param haven use haven package: 
+#' "labelled" - return labelled variables,
+#' "factor" - return factor or numeric variables,
+#' "numeric" - return numeric variables.
+#' @param suppress logical, if true the default message is suppressed
+#' @param ... further parameters passed to rlms_cleanup() function
+#' @export
+#' @return dataframe
+#' @examples
+#' # rlms_read("r21i_os24a.sav")
+rlms_read <- function(file, haven = c("factor", "labelled", "numeric"), 
+                      suppress = TRUE, ...) {
+
+  haven <- match.arg(haven) # check numeric/labelled/factor
+  
+  df <- haven::read_spss(file)
+  
+  df <- rlms_cleanup(df, ...)
+  
+  attr(df, "var_meta") <- rlms_extract_variable_labels(df)
+  attr(df, "value_meta") <- rlms_extract_value_labels(df)
+  
+  if (haven == "factor") {
+    df <- rlms_labelled2factor(df)
+  }
+  
+  if (haven == "numeric") {
+    df <- rlms_labelled2numeric(df)
   }
 
 
@@ -274,17 +428,6 @@ rlms_read <- function(file,
   df$level <- fileinfo$level
   df$sample <- fileinfo$sample
 
-  if (yesno) {
-    value_meta <-
-      dplyr::mutate(value_meta, vallabel = rlms_yesno_standartize(vallabel))
-  }
-  if (apostrophe) {
-    value_meta <-
-      dplyr::mutate(value_meta, vallabel = rlms_remove_apostrophe(vallabel))
-  }
-
-  attr(df, "var_meta") <- var_meta
-  attr(df, "value_meta") <- value_meta
 
   if (!suppress) {
     message("Variable labels: rlms_show_variable_labels(df). ")
@@ -294,9 +437,6 @@ rlms_read <- function(file,
     message("This message may be turned off with option: suppress = TRUE. ")
   }
 
-  if (colnames_tolower) {
-    colnames(df) <- stringr::str_to_lower(colnames(df))
-  }
 
   # to avoid long waiting time for occasional "df + enter":
   df <- dplyr::as.tbl(df)
@@ -541,6 +681,33 @@ is_labelled <- function(x) {
   return(class(x) == "labelled")
 }
 
+#' Get variable label
+#'
+#' Get variable label
+#'
+#' Get variable label
+#'
+#' @param x a vector
+#' @export
+#' @return character variable label
+get_label <- function(x) {
+  return(attr(x, "label"))
+}
+
+#' Get value labels of a vector
+#'
+#' Get value labels of a vector
+#'
+#' Get value labels of a vector
+#'
+#' @param x a vector
+#' @export
+#' @return character vector value labels
+get_labels <- function(x) {
+  return(attr(x, "labels"))
+}
+
+
 
 #' Get unlabelled values of a labelled vector
 #'
@@ -560,7 +727,7 @@ unlabelled_values <- function(x, na.rm = FALSE) {
       actual_values <- na.omit(actual_values)
     }
     
-    labelled_values <- attr(x, "labels")
+    labelled_values <- get_labels(x)
     unlabelled_values_answer <- setdiff(actual_values, labelled_values)
   } else {
     warning("The argument of `unlabelled_values` is not a labelled vector: NULL returned.")
@@ -590,7 +757,7 @@ labelled_values <- function(x, na.rm = FALSE) {
       actual_values <- na.omit(actual_values)
     }
     
-    labelled_values <- attr(x, "labels")
+    labelled_values <- get_labels(x)
     labelled_values_answer <- actual_values[actual_values %in% labelled_values]
   } else {
     warning("The argument of `unlabelled_values` is not a labelled vector: NULL returned.")
@@ -663,7 +830,7 @@ all_but_one_labelled <- function(x) {
 #' @export
 #' @return TRUE/FALSE
 as_factor_safe <- function(x) {
-  old_labels <- attr(x, "labels")
+  old_labels <- get_labels(x)
   unlabelled_x <- unlabelled_values(x, na.rm = TRUE)
   new_labels <- c(old_labels, unlabelled_x)
   new_names <- c(names(old_labels), unlabelled_x)

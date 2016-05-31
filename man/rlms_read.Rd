@@ -4,30 +4,20 @@
 \alias{rlms_read}
 \title{Read rlms data}
 \usage{
-rlms_read(file, suppress = TRUE, nine2na = TRUE, yesno = TRUE,
-  apostrophe = TRUE, remove_empty = TRUE, colnames_tolower = TRUE,
-  haven = c("no", "labelled", "factor", "numeric"))
+rlms_read(file, haven = c("factor", "labelled", "numeric"), suppress = TRUE,
+  ...)
 }
 \arguments{
 \item{file}{the filename}
 
-\item{suppress}{logical, if true the default message is suppressed}
-
-\item{nine2na}{automatically convert 99999999 to NA for numeric variables}
-
-\item{yesno}{convert yes/no answers to lowercase yes/no without apostrophes}
-
-\item{apostrophe}{trim apostrophes, TRUE by default}
-
-\item{remove_empty}{remove empty labels, TRUE by default}
-
-\item{colnames_tolower}{a logical value, indicating whether variable names should be converted to lowercase.
-TRUE by default.}
-
-\item{haven}{use haven package: "no" - (default) do not use "haven" package,
+\item{haven}{use haven package: 
 "labelled" - return labelled variables,
 "factor" - return factor or numeric variables,
 "numeric" - return numeric variables.}
+
+\item{suppress}{logical, if true the default message is suppressed}
+
+\item{...}{further parameters passed to rlms_cleanup() function}
 }
 \value{
 dataframe

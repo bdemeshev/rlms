@@ -247,7 +247,10 @@ rlms_labelled2factor <- function(df) {
     if (is_labelled(df[[var]])) { 
       if (all_labelled(df[[var]])) {
         # Rule 1: If all values are labelled then type is factor
-        df[[var]] <- haven::as_factor(df[[var]])
+        df[[var]] <- as_factor_safe(df[[var]])
+
+        # standard conversion will throw warning in the case of duplicate levels:
+        # df[[var]] <- haven::as_factor(df[[var]])
         
       } else if (all_but_one_labelled(df[[var]])) {
         # Rule 2: If all values but one in the middle are labelled then type is factor
@@ -832,6 +835,9 @@ all_but_one_labelled <- function(x) {
 #' @param x labelled vector
 #' @export
 #' @return TRUE/FALSE
+#' @examples 
+#' x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 3))
+#' as_factor_safe(x)
 as_factor_safe <- function(x) {
   old_labels <- get_labels(x)
   unlabelled_x <- unlabelled_values(x, na.rm = TRUE)

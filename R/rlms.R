@@ -172,7 +172,7 @@ rlms_cleanup <- function(df, suppress = TRUE,
   }
   
   for (var in colnames(df)) {
-    
+    message(var)
     if (remove_empty) {
       # remove "" in value labels
       
@@ -241,7 +241,7 @@ rlms_labelled2factor <- function(df) {
   
   for (var in names(df)) {
     # preserve variable label: it will show automatically in Rstudio
-    # message(var)
+    message(var)
     variable_label <- attr(df[[var]], "label")
     
     if (is_labelled(df[[var]])) { 
@@ -841,15 +841,20 @@ all_but_one_labelled <- function(x) {
 as_factor_safe <- function(x) {
   old_labels <- get_labels(x)
   unlabelled_x <- unlabelled_values(x, na.rm = TRUE)
-  new_labels <- c(old_labels, unlabelled_x)
-  new_names <- c(names(old_labels), unlabelled_x)
-  names(new_labels) <- new_names
-  attr(x, "labels") <- new_labels
   
+  new_labels <- c(names(old_labels), unlabelled_x)
+  
+  labels_df <- data.frame(values = c(old_labels, unlabelled_x),
+                          new_labels = new_labels, 
+                          stringsAsFactors = FALSE)
+
   # this will throw warning for duplicate labels:
   # x_factor <- haven::as_factor(x)
-  # so we use magic:
-  x_factor <- factor(names(new_labels[x]))
+  
+  # so we use magic of left_join: do we have smth faster?
+  x_df <- dplyr::left_join(data.frame(values = as.numeric(x)), labels_df, by = "values")
+  
+  x_factor <- factor(x_df$new_labels, levels = unique(new_labels))
   
   return(x_factor)
 }

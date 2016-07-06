@@ -10,7 +10,7 @@ rlms_read(file, haven = c("factor", "labelled", "numeric"), suppress = TRUE,
 \arguments{
 \item{file}{the filename}
 
-\item{haven}{use haven package: 
+\item{haven}{use haven package:
 "labelled" - return labelled variables,
 "factor" - return factor or numeric variables,
 "numeric" - return numeric variables.}

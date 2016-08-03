@@ -722,7 +722,7 @@ unlabelled_values <- function(x, na.rm = FALSE) {
     actual_values <- unique(x)
 
     if (na.rm) {
-      actual_values <- na.omit(actual_values)
+      actual_values <- stats::na.omit(actual_values)
     }
 
     labelled_values <- get_labels(x)
@@ -752,7 +752,7 @@ labelled_values <- function(x, na.rm = FALSE) {
     actual_values <- unique(x)
 
     if (na.rm) {
-      actual_values <- na.omit(actual_values)
+      actual_values <- stats::na.omit(actual_values)
     }
 
     labelled_values <- get_labels(x)

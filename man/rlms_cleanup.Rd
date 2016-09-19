@@ -5,7 +5,8 @@
 \title{Clean rlms data}
 \usage{
 rlms_cleanup(df, suppress = TRUE, nine2na = TRUE, yesno = TRUE,
-  apostrophe = TRUE, remove_empty = TRUE, colnames_tolower = TRUE)
+  apostrophe = TRUE, remove_empty = TRUE, colnames_tolower = TRUE,
+  verbose = FALSE)
 }
 \arguments{
 \item{df}{data.frame read by haven::read.spss}
@@ -20,7 +21,9 @@ rlms_cleanup(df, suppress = TRUE, nine2na = TRUE, yesno = TRUE,
 
 \item{remove_empty}{remove empty labels, TRUE by default}
 
-\item{colnames_tolower}{a logical value, indicating whether variable names should be converted to lowercase.
+\item{colnames_tolower}{a logical value, indicating whether variable names should be converted to lowercase.}
+
+\item{verbose}{add some debugging output
 TRUE by default.}
 }
 \value{

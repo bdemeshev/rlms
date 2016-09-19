@@ -150,6 +150,7 @@ rlms_yesno_standartize <- function(x) {
 #' @param suppress logical, if true the default message is suppressed
 #' @param nine2na automatically convert 99999999 to NA for numeric variables
 #' @param colnames_tolower a logical value, indicating whether variable names should be converted to lowercase.
+#' @param verbose add some debugging output
 #' TRUE by default.
 #' @export
 #' @return dataframe
@@ -158,14 +159,17 @@ rlms_cleanup <- function(df, suppress = TRUE,
                          yesno = TRUE,
                          apostrophe = TRUE,
                          remove_empty = TRUE,
-                         colnames_tolower = TRUE) {
+                         colnames_tolower = TRUE,
+                         verbose = FALSE) {
 
   if (colnames_tolower) {
     colnames(df) <- stringr::str_to_lower(colnames(df))
   }
 
   for (var in colnames(df)) {
-    message(var)
+    if (verbose) {
+      message(var)
+    }
     if (remove_empty) {
       # remove "" in value labels
 
@@ -222,19 +226,24 @@ rlms_labelled2numeric <- function(df) {
 #' Transform all labelled variables into factor or numeric
 #'
 #' @param df data.frame with labelled variables
+#' @param verbose add some debugging information
 #' @export
 #' @return df data.frame with factor or numeric variables instead of labelled
 #' @examples
 #' df_labelled <- data.frame(x = haven::labelled(c(1, 1, 2, NA), c(Male = 1, Female = 2)), y = 1:4)
 #' df_new <- rlms_labelled2factor(df_labelled)
-rlms_labelled2factor <- function(df) {
+rlms_labelled2factor <- function(df, verbose = FALSE) {
 
-  message("The option haven = 'factor' is experimental and subject to change.")
+  if (verbose) {
+    message("The option haven = 'factor' is experimental and subject to change.")
+  }
 
 
   for (var in names(df)) {
     # preserve variable label: it will show automatically in Rstudio
-    message(var)
+    if (verbose) {
+      message(var)
+    }
     variable_label <- attr(df[[var]], "label")
 
     if (is_labelled(df[[var]])) {
@@ -392,14 +401,14 @@ rlms_legacy_read <- function(file,
 #' "labelled" - return labelled variables,
 #' "factor" - return factor or numeric variables,
 #' "numeric" - return numeric variables.
-#' @param suppress logical, if true the default message is suppressed
-#' @param ... further parameters passed to rlms_cleanup() function
+#' @param suppress deprecated
+#' @param ... further parameters passed to rlms_cleanup() and rlms_labelled2factor() functions
 #' @export
 #' @return dataframe
 #' @examples
 #' # rlms_read("r21i_os24a.sav")
 rlms_read <- function(file, haven = c("factor", "labelled", "numeric"),
-                      suppress = TRUE, ...) {
+                      suppress, ...) {
 
   haven <- match.arg(haven) # check numeric/labelled/factor
 
@@ -411,7 +420,7 @@ rlms_read <- function(file, haven = c("factor", "labelled", "numeric"),
   attr(df, "value_meta") <- rlms_extract_value_labels(df)
 
   if (haven == "factor") {
-    df <- rlms_labelled2factor(df)
+    df <- rlms_labelled2factor(df, ...)
   }
 
   if (haven == "numeric") {
@@ -427,12 +436,8 @@ rlms_read <- function(file, haven = c("factor", "labelled", "numeric"),
   df$sample <- fileinfo$sample
 
 
-  if (!suppress) {
-    message("Variable labels: rlms_show_variable_labels(df). ")
-    message("Value labels: rlms_show_value_labels(df). ")
-    message("You may extract meta information now.")
-    message("Later some functions may destroy meta information. ")
-    message("This message may be turned off with option: suppress = TRUE. ")
+  if (!missing(suppress)) {
+    warning("Option `supress` is deprecated. Just omit it :)")
   }
 
 

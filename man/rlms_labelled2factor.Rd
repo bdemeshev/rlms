@@ -4,10 +4,12 @@
 \alias{rlms_labelled2factor}
 \title{Transform all labelled variables into factor or numeric}
 \usage{
-rlms_labelled2factor(df)
+rlms_labelled2factor(df, verbose = FALSE)
 }
 \arguments{
 \item{df}{data.frame with labelled variables}
+
+\item{verbose}{add some debugging information}
 }
 \value{
 df data.frame with factor or numeric variables instead of labelled

@@ -4,8 +4,7 @@
 \alias{rlms_read}
 \title{Read rlms data}
 \usage{
-rlms_read(file, haven = c("factor", "labelled", "numeric"), suppress = TRUE,
-  ...)
+rlms_read(file, haven = c("factor", "labelled", "numeric"), suppress, ...)
 }
 \arguments{
 \item{file}{the filename}
@@ -15,9 +14,9 @@ rlms_read(file, haven = c("factor", "labelled", "numeric"), suppress = TRUE,
 "factor" - return factor or numeric variables,
 "numeric" - return numeric variables.}
 
-\item{suppress}{logical, if true the default message is suppressed}
+\item{suppress}{deprecated}
 
-\item{...}{further parameters passed to rlms_cleanup() function}
+\item{...}{further parameters passed to rlms_cleanup() and rlms_labelled2factor() functions}
 }
 \value{
 dataframe

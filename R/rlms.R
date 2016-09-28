@@ -51,10 +51,22 @@ rlms_remove_apostrophe <- function(x) {
 #' @export
 #' @return data frame with variable labels
 rlms_extract_variable_labels <- function(df) {
-  varlabel <- unlist(lapply(df, function(x) attr(x, "label")))
-  var_meta <- data.frame(var = names(df),
-                         varlabel = varlabel,
+  
+  var_label <- unlist(lapply(df, function(x) attr(x, "label")))
+  var_name <- attr(var_label, "names")
+  
+  # variables with labels
+  var_meta <- data.frame(var = var_name,
+                         varlabel = var_label,
                          stringsAsFactors = FALSE)
+  
+  # some variables maybe unlabelled!!!
+  var_unlabelled <- setdiff(names(df), var_name)
+  
+  if (length(var_unlabelled) > 0) {
+    var_meta_more <- data.frame(var = var_unlabelled, varlabel = "", stringsAsFactors = FALSE)
+    var_meta <- dplyr::bind_rows(var_meta, var_meta_more)
+  }
 
   return(var_meta)
 }
@@ -73,6 +85,11 @@ rlms_extract_value_labels <- function(df) {
   value_meta <- NULL
   for (var in names(df)) {
     value <- get_labels(df[[var]])
+    
+    if ("" %in% value) {
+      message("Variable ", var, " contains empty value label ''. Empty value label was removed.")
+      value <- setdiff(value, "")
+    }
 
     # sometimes class is "labelled" but there are no labels :)
     if (length(value) > 0) {

@@ -172,21 +172,69 @@ rlms_yesno_standartize <- function(x) {
 #' @export
 #' @return dataframe
 rlms_cleanup <- function(df, suppress = TRUE,
+                         empty2na = TRUE,
                          nine2na = TRUE,
                          yesno = TRUE,
                          apostrophe = TRUE,
                          remove_empty = TRUE,
                          colnames_tolower = TRUE,
                          verbose = FALSE) {
+  
+  if (verbose) {
+    message("Cleanup options:")
+    message("Convert '' to NA, empty2na = ", empty2na)
+    message("Convert 99999990+ to NA, nine2na = ", nine2na)
+    message("Convert column names to lowercase, colnames_tolower = ", colnames_tolower)
+    message("Standartise Yes/NO to yes/no, yesno = ", yesno)
+    message("Remove redundant apostrophes, apostrophe = ", apostrophe)
+    message("Remove empty value label, remove_empty = ", remove_empty)
+  }
+  
 
   if (colnames_tolower) {
     colnames(df) <- stringr::str_to_lower(colnames(df))
   }
+  
+
 
   for (var in colnames(df)) {
+    var_class <- class(df[[var]])
+    
     if (verbose) {
-      message(var)
+      message("Processing variable: ", var, " of class ", var_class)
     }
+    
+
+    if ((nine2na) & (var_class == "numeric")) {
+      # replace 99999990+ for numeric variables
+      df[[var]][df[[var]] > 99999990] <- NA
+      # one cannot use ifelse as it destroys attributes!!!
+    }
+    
+    if (empty2na)  {
+      df[[var]][df[[var]] == ""] <- NA
+    }
+    
+    if (yesno) {
+      if (var_class == "character") {
+        df[[var]] <- rlms_yesno_standartize(df[[var]])
+      }
+      if ((var_class == "labelled") & length(attr(df[[var]], "labels") > 0)) {
+        attr(attr(df[[var]], "labels"), "names") <- rlms_yesno_standartize(attr(attr(df[[var]], "labels"), "names"))
+      } 
+    }
+  
+    
+    if (apostrophe) {
+      if (var_class == "character") {
+        df[[var]] <- rlms_remove_apostrophe(df[[var]])
+      }
+      if ((var_class == "labelled") & length(attr(df[[var]], "labels") > 0)) {
+        attr(attr(df[[var]], "labels"), "names") <- rlms_remove_apostrophe(attr(attr(df[[var]], "labels"), "names"))
+      } 
+    }
+    
+    
     if (remove_empty) {
       # remove "" in value labels
 
@@ -419,25 +467,26 @@ rlms_legacy_read <- function(file,
 #' "factor" - return factor or numeric variables,
 #' "numeric" - return numeric variables.
 #' @param suppress deprecated
+#' @param verbose logical verbose output 
 #' @param ... further parameters passed to rlms_cleanup() and rlms_labelled2factor() functions
 #' @export
 #' @return dataframe
 #' @examples
 #' # rlms_read("r21i_os24a.sav")
 rlms_read <- function(file, haven = c("factor", "labelled", "numeric"),
-                      suppress, ...) {
+                      suppress, verbose = FALSE, ...) {
 
   haven <- match.arg(haven) # check numeric/labelled/factor
 
   df <- haven::read_spss(file)
 
-  df <- rlms_cleanup(df, ...)
+  df <- rlms_cleanup(df, verbose = verbose, ...)
 
   attr(df, "var_meta") <- rlms_extract_variable_labels(df)
   attr(df, "value_meta") <- rlms_extract_value_labels(df)
 
   if (haven == "factor") {
-    df <- rlms_labelled2factor(df, ...)
+    df <- rlms_labelled2factor(df, verbose = verbose, ...)
   }
 
   if (haven == "numeric") {
@@ -454,7 +503,7 @@ rlms_read <- function(file, haven = c("factor", "labelled", "numeric"),
 
 
   if (!missing(suppress)) {
-    warning("Option `supress` is deprecated. Just omit it :)")
+    warning("Option 'supress' is deprecated. Use 'verbose' instead :)")
   }
 
 

@@ -18,4 +18,8 @@ Check whether all values but rlms na (99999990+)  have labels
 \details{
 Check whether all values but rlms na (99999990+)  have labels
 }
+\examples{
+x <- haven::labelled(c(1, 1, 2, 3, 99999995), c(Male = 1, Male = 2, Female = 3))
+all_but_rlmsna_labelled(x)
+}
 

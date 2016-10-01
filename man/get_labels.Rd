@@ -18,4 +18,8 @@ Get value labels of a vector
 \details{
 Get value labels of a vector
 }
+\examples{
+x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 3))
+get_labels(x)
+}
 

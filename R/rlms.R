@@ -52,22 +52,19 @@ rlms_remove_apostrophe <- function(x) {
 #' @return data frame with variable labels
 rlms_extract_variable_labels <- function(df) {
   
-  var_label <- unlist(lapply(df, function(x) attr(x, "label")))
-  var_name <- attr(var_label, "names")
+  var_meta <- data.frame(var = names(df), varlabel = "", spss_format = "", stringsAsFactors = FALSE)
   
-  # variables with labels
-  var_meta <- data.frame(var = var_name,
-                         varlabel = var_label,
-                         stringsAsFactors = FALSE)
-  
-  # some variables maybe unlabelled!!!
-  var_unlabelled <- setdiff(names(df), var_name)
-  
-  if (length(var_unlabelled) > 0) {
-    var_meta_more <- data.frame(var = var_unlabelled, varlabel = "", stringsAsFactors = FALSE)
-    var_meta <- dplyr::bind_rows(var_meta, var_meta_more)
+  for (i in 1:ncol(df)) {
+    spss_format <- attr(df[[i]], "format.spss")
+    if (!is.null(spss_format)) {
+      var_meta$spss_format[i] <- spss_format
+    }
+    
+    varlabel <- attr(df[[i]], "label")
+    if (!is.null(varlabel)) {
+      var_meta$varlabel[i] <- varlabel
+    }
   }
-
   return(var_meta)
 }
 
@@ -202,7 +199,7 @@ rlms_cleanup <- function(df, suppress = TRUE,
     var_class <- class(df[[var]])
     
     if (verbose) {
-      message("Processing variable: ", var, " of class ", var_class)
+      # message("Processing variable: ", var, " of class ", var_class)
     }
     
 
@@ -312,7 +309,7 @@ rlms_labelled2factor <- function(df, verbose = FALSE) {
     # preserve variable label: it will show automatically in Rstudio
     var_class <- class(df[[var]])
     if (verbose) {
-      message("Converting variable ", var, " of class ",  var_class)
+      # message("Converting variable ", var, " of class ",  var_class)
     }
     variable_label <- attr(df[[var]], "label")
 
@@ -752,6 +749,9 @@ rlms_load <- function(rlms_folder = getwd(), wave,
 #' @param x a vector
 #' @export
 #' @return TRUE/FALSE
+#' @examples
+#' x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 3))
+#' is_labelled(x)
 is_labelled <- function(x) {
   return(class(x) == "labelled")
 }
@@ -778,6 +778,9 @@ get_label <- function(x) {
 #' @param x a vector
 #' @export
 #' @return character vector value labels
+#' @examples
+#' x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 3))
+#' get_labels(x)
 get_labels <- function(x) {
   return(attr(x, "labels"))
 }
@@ -794,6 +797,9 @@ get_labels <- function(x) {
 #' @param na.rm a logical value indicating whether NA values should be stripped
 #' @export
 #' @return vector of values without labels
+#' @examples
+#' x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 3))
+#' unlabelled_values(x)
 unlabelled_values <- function(x, na.rm = FALSE) {
   if (is_labelled(x)) {
     actual_values <- unique(x)
@@ -824,6 +830,9 @@ unlabelled_values <- function(x, na.rm = FALSE) {
 #' Normally NA is not labelled and is not returned even with na.rm = FALSE.
 #' @export
 #' @return vector of values with labels
+#' @examples
+#' x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 3))
+#' labelled_values(x)
 labelled_values <- function(x, na.rm = FALSE) {
   if (is_labelled(x)) {
     actual_values <- unique(x)
@@ -854,6 +863,9 @@ labelled_values <- function(x, na.rm = FALSE) {
 #' @param na.rm a logical value indicating whether NA values should be stripped. TRUE by default
 #' @export
 #' @return TRUE/FALSE
+#' @examples
+#' x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 3))
+#' all_labelled(x)
 all_labelled <- function(x, na.rm = TRUE) {
   if (is_labelled(x)) {
     all_labelled_answer <- length(unlabelled_values(x, na.rm = na.rm)) == 0
@@ -874,6 +886,9 @@ all_labelled <- function(x, na.rm = TRUE) {
 #' @param x labelled vector
 #' @export
 #' @return TRUE/FALSE
+#' @examples
+#' x <- haven::labelled(c(1, 1, 2, 3, 99999995), c(Male = 1, Male = 2, Female = 3))
+#' all_but_rlmsna_labelled(x)
 all_but_rlmsna_labelled <- function(x) {
   
   all_but_rlmsna_labelled_answer <- FALSE
@@ -901,6 +916,9 @@ all_but_rlmsna_labelled <- function(x) {
 #' @param x labelled vector
 #' @export
 #' @return TRUE/FALSE
+#' @examples
+#' x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 4))
+#' all_but_one_labelled(x)
 all_but_one_labelled <- function(x) {
 
   all_but_one_labelled_answer <- FALSE
@@ -909,7 +927,7 @@ all_but_one_labelled <- function(x) {
     if (is.numeric(x)) {
       unlabelled_x <- unlabelled_values(x, na.rm = TRUE)
       labelled_x <- labelled_values(x, na.rm = TRUE)
-      if (length(unlabelled_x) == 1) {
+      if ((length(unlabelled_x) == 1) & (length(labelled_x) > 0)) {
         if (unlabelled_x > min(labelled_x) & unlabelled_x < max(labelled_x)) {
           all_but_one_labelled_answer <- TRUE
         }

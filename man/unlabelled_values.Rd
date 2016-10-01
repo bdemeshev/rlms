@@ -20,4 +20,8 @@ Get unlabelled values of a labelled vector
 \details{
 Get unlabelled values of a labelled vector
 }
+\examples{
+x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 3))
+unlabelled_values(x)
+}
 

@@ -18,4 +18,8 @@ Check whether the variable is labelled
 \details{
 Check whether the variable is labelled
 }
+\examples{
+x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 3))
+is_labelled(x)
+}
 

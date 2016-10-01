@@ -165,7 +165,8 @@ rlms_yesno_standartize <- function(x) {
 #' @param apostrophe trim apostrophes, TRUE by default
 #' @param remove_empty remove empty labels, TRUE by default
 #' @param suppress logical, if true the default message is suppressed
-#' @param nine2na automatically convert 99999999 to NA for numeric variables
+#' @param nine2na convert 99999990+ to NA for numeric variables
+#' @param empty2na convert empty character values to NA
 #' @param colnames_tolower a logical value, indicating whether variable names should be converted to lowercase.
 #' @param verbose add some debugging output
 #' TRUE by default.
@@ -284,6 +285,8 @@ rlms_labelled2numeric <- function(df) {
   return(df)
 }
 
+
+
 #' Transform all labelled variables into factor or numeric
 #'
 #' Transform all labelled variables into factor or numeric
@@ -306,8 +309,9 @@ rlms_labelled2factor <- function(df, verbose = FALSE) {
 
   for (var in names(df)) {
     # preserve variable label: it will show automatically in Rstudio
+    var_class <- class(df[[var]])
     if (verbose) {
-      message(var)
+      message("Converting variable ", var, " of class ",  var_class)
     }
     variable_label <- attr(df[[var]], "label")
 
@@ -325,13 +329,14 @@ rlms_labelled2factor <- function(df, verbose = FALSE) {
         message("Labelled variable ", var, " was considered as factor: it has only one unlabelled value.")
         message("This unlabelled value is neither minimal neither maximal.")
 
-      } else if (min(unlabelled_values(df[[var]], na.rm = TRUE)) > 99999990) {
-        # Rule 3: If all unlabelled values are NA codes then type is factor
+      } else if (all_but_rlmsna_labelled(df[[var]])) {
+        # Rule 3: If all unlabelled values of a numeric variable are NA codes then type is factor
         df[[var]] <- as_factor_safe(df[[var]])
         message("Labelled variable ", var, " was considered as factor: all unlabelled values are bigger than 99999990.")
 
-      } else {
-        df[[var]] <- as.numeric(df[[var]])
+      } else { 
+        # numeric will be kept as numeric and character as character
+        df[[var]] <- as.vector(df[[var]])
       }
     }
 
@@ -859,6 +864,32 @@ all_labelled <- function(x, na.rm = TRUE) {
 }
 
 
+#' Check whether all values but rlms na (99999990+)  have labels
+#'
+#' Check whether all values but rlms na (99999990+)  have labels
+#'
+#' Check whether all values but rlms na (99999990+)  have labels
+#'
+#' @param x labelled vector
+#' @export
+#' @return TRUE/FALSE
+all_but_rlmsna_labelled <- function(x) {
+  
+  all_but_rlmsna_labelled_answer <- FALSE
+  
+  if (is_labelled(x)) {
+    if (is.numeric(x)) {
+      if (min(unlabelled_values(x, na.rm = TRUE)) > 99999990) {
+        all_but_rlmsna_labelled_answer <- TRUE
+      }
+    }
+  } else {
+    warning("The argument of `all_but_rlmsna_labelled` is not a labelled vector: FALSE returned.")
+  }
+  return(all_but_rlmsna_labelled_answer)
+}
+
+
 
 #' Check whether all values but one in the middle have labels
 #'
@@ -874,16 +905,17 @@ all_but_one_labelled <- function(x) {
   all_but_one_labelled_answer <- FALSE
 
   if (is_labelled(x)) {
-    unlabelled_x <- unlabelled_values(x, na.rm = TRUE)
-    labelled_x <- labelled_values(x, na.rm = TRUE)
-    if (length(unlabelled_x) == 1) {
-      if (unlabelled_x > min(labelled_x) & unlabelled_x < max(labelled_x)) {
-        all_but_one_labelled_answer <- TRUE
+    if (is.numeric(x)) {
+      unlabelled_x <- unlabelled_values(x, na.rm = TRUE)
+      labelled_x <- labelled_values(x, na.rm = TRUE)
+      if (length(unlabelled_x) == 1) {
+        if (unlabelled_x > min(labelled_x) & unlabelled_x < max(labelled_x)) {
+          all_but_one_labelled_answer <- TRUE
+        }
       }
     }
-
   } else {
-    warning("The argument of `all_labelled` is not a labelled vector: FALSE returned.")
+    warning("The argument of `all_but_one_labelled` is not a labelled vector: FALSE returned.")
   }
   return(all_but_one_labelled_answer)
 }

@@ -4,16 +4,18 @@
 \alias{rlms_cleanup}
 \title{Clean rlms data}
 \usage{
-rlms_cleanup(df, suppress = TRUE, nine2na = TRUE, yesno = TRUE,
-  apostrophe = TRUE, remove_empty = TRUE, colnames_tolower = TRUE,
-  verbose = FALSE)
+rlms_cleanup(df, suppress = TRUE, empty2na = TRUE, nine2na = TRUE,
+  yesno = TRUE, apostrophe = TRUE, remove_empty = TRUE,
+  colnames_tolower = TRUE, verbose = FALSE)
 }
 \arguments{
 \item{df}{data.frame read by haven::read.spss}
 
 \item{suppress}{logical, if true the default message is suppressed}
 
-\item{nine2na}{automatically convert 99999999 to NA for numeric variables}
+\item{empty2na}{convert empty character values to NA}
+
+\item{nine2na}{convert 99999990+ to NA for numeric variables}
 
 \item{yesno}{convert yes/no answers to lowercase yes/no without apostrophes}
 

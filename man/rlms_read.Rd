@@ -4,7 +4,8 @@
 \alias{rlms_read}
 \title{Read rlms data}
 \usage{
-rlms_read(file, haven = c("factor", "labelled", "numeric"), suppress, ...)
+rlms_read(file, haven = c("factor", "labelled", "numeric"), suppress,
+  verbose = FALSE, ...)
 }
 \arguments{
 \item{file}{the filename}
@@ -15,6 +16,8 @@ rlms_read(file, haven = c("factor", "labelled", "numeric"), suppress, ...)
 "numeric" - return numeric variables.}
 
 \item{suppress}{deprecated}
+
+\item{verbose}{logical verbose output}
 
 \item{...}{further parameters passed to rlms_cleanup() and rlms_labelled2factor() functions}
 }

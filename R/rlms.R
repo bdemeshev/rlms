@@ -51,11 +51,20 @@ rlms_remove_apostrophe <- function(x) {
 #' @export
 #' @return data frame with variable labels
 rlms_extract_variable_labels <- function(df) {
-  varlabel <- unlist(lapply(df, function(x) attr(x, "label")))
-  var_meta <- data.frame(var = names(df),
-                         varlabel = varlabel,
-                         stringsAsFactors = FALSE)
-
+  
+  var_meta <- data.frame(var = names(df), varlabel = "", spss_format = "", stringsAsFactors = FALSE)
+  
+  for (i in 1:ncol(df)) {
+    spss_format <- attr(df[[i]], "format.spss")
+    if (!is.null(spss_format)) {
+      var_meta$spss_format[i] <- spss_format
+    }
+    
+    varlabel <- attr(df[[i]], "label")
+    if (!is.null(varlabel)) {
+      var_meta$varlabel[i] <- varlabel
+    }
+  }
   return(var_meta)
 }
 
@@ -73,6 +82,11 @@ rlms_extract_value_labels <- function(df) {
   value_meta <- NULL
   for (var in names(df)) {
     value <- get_labels(df[[var]])
+    
+    if ("" %in% value) {
+      message("Variable ", var, " contains empty value label ''. Empty value label was removed.")
+      value <- setdiff(value, "")
+    }
 
     # sometimes class is "labelled" but there are no labels :)
     if (length(value) > 0) {
@@ -148,28 +162,77 @@ rlms_yesno_standartize <- function(x) {
 #' @param apostrophe trim apostrophes, TRUE by default
 #' @param remove_empty remove empty labels, TRUE by default
 #' @param suppress logical, if true the default message is suppressed
-#' @param nine2na automatically convert 99999999 to NA for numeric variables
+#' @param nine2na convert 99999990+ to NA for numeric variables
+#' @param empty2na convert empty character values to NA
 #' @param colnames_tolower a logical value, indicating whether variable names should be converted to lowercase.
 #' @param verbose add some debugging output
 #' TRUE by default.
 #' @export
 #' @return dataframe
 rlms_cleanup <- function(df, suppress = TRUE,
+                         empty2na = TRUE,
                          nine2na = TRUE,
                          yesno = TRUE,
                          apostrophe = TRUE,
                          remove_empty = TRUE,
                          colnames_tolower = TRUE,
                          verbose = FALSE) {
+  
+  if (verbose) {
+    message("Cleanup options:")
+    message("Convert '' to NA, empty2na = ", empty2na)
+    message("Convert 99999990+ to NA, nine2na = ", nine2na)
+    message("Convert column names to lowercase, colnames_tolower = ", colnames_tolower)
+    message("Standartise Yes/NO to yes/no, yesno = ", yesno)
+    message("Remove redundant apostrophes, apostrophe = ", apostrophe)
+    message("Remove empty value label, remove_empty = ", remove_empty)
+  }
+  
 
   if (colnames_tolower) {
     colnames(df) <- stringr::str_to_lower(colnames(df))
   }
+  
+
 
   for (var in colnames(df)) {
+    var_class <- class(df[[var]])
+    
     if (verbose) {
-      message(var)
+      # message("Processing variable: ", var, " of class ", var_class)
     }
+    
+
+    if ((nine2na) & (var_class == "numeric")) {
+      # replace 99999990+ for numeric variables
+      df[[var]][df[[var]] > 99999990] <- NA
+      # one cannot use ifelse as it destroys attributes!!!
+    }
+    
+    if (empty2na)  {
+      df[[var]][df[[var]] == ""] <- NA
+    }
+    
+    if (yesno) {
+      if (var_class == "character") {
+        df[[var]] <- rlms_yesno_standartize(df[[var]])
+      }
+      if ((var_class == "labelled") & length(attr(df[[var]], "labels") > 0)) {
+        attr(attr(df[[var]], "labels"), "names") <- rlms_yesno_standartize(attr(attr(df[[var]], "labels"), "names"))
+      } 
+    }
+  
+    
+    if (apostrophe) {
+      if (var_class == "character") {
+        df[[var]] <- rlms_remove_apostrophe(df[[var]])
+      }
+      if ((var_class == "labelled") & length(attr(df[[var]], "labels") > 0)) {
+        attr(attr(df[[var]], "labels"), "names") <- rlms_remove_apostrophe(attr(attr(df[[var]], "labels"), "names"))
+      } 
+    }
+    
+    
     if (remove_empty) {
       # remove "" in value labels
 
@@ -193,31 +256,34 @@ rlms_cleanup <- function(df, suppress = TRUE,
   return(df)
 }
 
-#' Transform all labelled variables into numeric
+#' Transform all labelled variables into plain vector variables
 #'
-#' Transform all labelled variables into numeric
+#' Transform all labelled variables into plain vector variables
 #'
-#' Transform all labelled variables into numeric
+#' Transform all labelled variables into plain vector variables
 #'
 #' @param df data.frame with labelled variables
 #' @export
 #' @return df data.frame with numeric variables instead of labelled
 #' @examples
 #' df_labelled <- data.frame(x = haven::labelled(c(1, 1, 2, NA), c(Male = 1, Female = 2)), y = 1:4)
-#' df_new <- rlms_labelled2numeric(df_labelled)
-rlms_labelled2numeric <- function(df) {
+#' df_new <- rlms_labelled2plain(df_labelled)
+rlms_labelled2plain <- function(df) {
   for (var in names(df)) {
     if (is_labelled(df[[var]])) {
       # preserve variable label: it will show automatically in Rstudio
       variable_label <- attr(df[[var]], "label")
 
-      df[[var]] <- as.numeric(df[[var]])
+      # as.vector works well with both numeric and character variables
+      df[[var]] <- as.vector(df[[var]])
 
       attr(df[[var]], "label") <- variable_label
     }
   }
   return(df)
 }
+
+
 
 #' Transform all labelled variables into factor or numeric
 #'
@@ -241,8 +307,9 @@ rlms_labelled2factor <- function(df, verbose = FALSE) {
 
   for (var in names(df)) {
     # preserve variable label: it will show automatically in Rstudio
+    var_class <- class(df[[var]])
     if (verbose) {
-      message(var)
+      # message("Converting variable ", var, " of class ",  var_class)
     }
     variable_label <- attr(df[[var]], "label")
 
@@ -260,13 +327,14 @@ rlms_labelled2factor <- function(df, verbose = FALSE) {
         message("Labelled variable ", var, " was considered as factor: it has only one unlabelled value.")
         message("This unlabelled value is neither minimal neither maximal.")
 
-      } else if (min(unlabelled_values(df[[var]], na.rm = TRUE)) > 99999990) {
-        # Rule 3: If all unlabelled values are NA codes then type is factor
+      } else if (all_but_rlmsna_labelled(df[[var]])) {
+        # Rule 3: If all unlabelled values of a numeric variable are NA codes then type is factor
         df[[var]] <- as_factor_safe(df[[var]])
         message("Labelled variable ", var, " was considered as factor: all unlabelled values are bigger than 99999990.")
 
-      } else {
-        df[[var]] <- as.numeric(df[[var]])
+      } else { 
+        # numeric will be kept as numeric and character as character
+        df[[var]] <- as.vector(df[[var]])
       }
     }
 
@@ -402,29 +470,30 @@ rlms_legacy_read <- function(file,
 #' "factor" - return factor or numeric variables,
 #' "numeric" - return numeric variables.
 #' @param suppress deprecated
+#' @param verbose logical verbose output 
 #' @param ... further parameters passed to rlms_cleanup() and rlms_labelled2factor() functions
 #' @export
 #' @return dataframe
 #' @examples
 #' # rlms_read("r21i_os24a.sav")
 rlms_read <- function(file, haven = c("factor", "labelled", "numeric"),
-                      suppress, ...) {
+                      suppress, verbose = FALSE, ...) {
 
   haven <- match.arg(haven) # check numeric/labelled/factor
 
   df <- haven::read_spss(file)
 
-  df <- rlms_cleanup(df, ...)
+  df <- rlms_cleanup(df, verbose = verbose, ...)
 
   attr(df, "var_meta") <- rlms_extract_variable_labels(df)
   attr(df, "value_meta") <- rlms_extract_value_labels(df)
 
   if (haven == "factor") {
-    df <- rlms_labelled2factor(df, ...)
+    df <- rlms_labelled2factor(df, verbose = verbose, ...)
   }
 
   if (haven == "numeric") {
-    df <- rlms_labelled2numeric(df)
+    df <- rlms_labelled2plain(df)
   }
 
 
@@ -437,7 +506,7 @@ rlms_read <- function(file, haven = c("factor", "labelled", "numeric"),
 
 
   if (!missing(suppress)) {
-    warning("Option `supress` is deprecated. Just omit it :)")
+    warning("Option 'supress' is deprecated. Use 'verbose' instead :)")
   }
 
 
@@ -680,6 +749,9 @@ rlms_load <- function(rlms_folder = getwd(), wave,
 #' @param x a vector
 #' @export
 #' @return TRUE/FALSE
+#' @examples
+#' x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 3))
+#' is_labelled(x)
 is_labelled <- function(x) {
   return(class(x) == "labelled")
 }
@@ -706,6 +778,9 @@ get_label <- function(x) {
 #' @param x a vector
 #' @export
 #' @return character vector value labels
+#' @examples
+#' x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 3))
+#' get_labels(x)
 get_labels <- function(x) {
   return(attr(x, "labels"))
 }
@@ -722,6 +797,9 @@ get_labels <- function(x) {
 #' @param na.rm a logical value indicating whether NA values should be stripped
 #' @export
 #' @return vector of values without labels
+#' @examples
+#' x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 3))
+#' unlabelled_values(x)
 unlabelled_values <- function(x, na.rm = FALSE) {
   if (is_labelled(x)) {
     actual_values <- unique(x)
@@ -752,6 +830,9 @@ unlabelled_values <- function(x, na.rm = FALSE) {
 #' Normally NA is not labelled and is not returned even with na.rm = FALSE.
 #' @export
 #' @return vector of values with labels
+#' @examples
+#' x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 3))
+#' labelled_values(x)
 labelled_values <- function(x, na.rm = FALSE) {
   if (is_labelled(x)) {
     actual_values <- unique(x)
@@ -782,6 +863,9 @@ labelled_values <- function(x, na.rm = FALSE) {
 #' @param na.rm a logical value indicating whether NA values should be stripped. TRUE by default
 #' @export
 #' @return TRUE/FALSE
+#' @examples
+#' x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 3))
+#' all_labelled(x)
 all_labelled <- function(x, na.rm = TRUE) {
   if (is_labelled(x)) {
     all_labelled_answer <- length(unlabelled_values(x, na.rm = na.rm)) == 0
@@ -790,6 +874,35 @@ all_labelled <- function(x, na.rm = TRUE) {
     all_labelled_answer <- TRUE
   }
   return(all_labelled_answer)
+}
+
+
+#' Check whether all values but rlms na (99999990+)  have labels
+#'
+#' Check whether all values but rlms na (99999990+)  have labels
+#'
+#' Check whether all values but rlms na (99999990+)  have labels
+#'
+#' @param x labelled vector
+#' @export
+#' @return TRUE/FALSE
+#' @examples
+#' x <- haven::labelled(c(1, 1, 2, 3, 99999995), c(Male = 1, Male = 2, Female = 3))
+#' all_but_rlmsna_labelled(x)
+all_but_rlmsna_labelled <- function(x) {
+  
+  all_but_rlmsna_labelled_answer <- FALSE
+  
+  if (is_labelled(x)) {
+    if (is.numeric(x)) {
+      if (min(unlabelled_values(x, na.rm = TRUE)) > 99999990) {
+        all_but_rlmsna_labelled_answer <- TRUE
+      }
+    }
+  } else {
+    warning("The argument of `all_but_rlmsna_labelled` is not a labelled vector: FALSE returned.")
+  }
+  return(all_but_rlmsna_labelled_answer)
 }
 
 
@@ -803,21 +916,25 @@ all_labelled <- function(x, na.rm = TRUE) {
 #' @param x labelled vector
 #' @export
 #' @return TRUE/FALSE
+#' @examples
+#' x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 4))
+#' all_but_one_labelled(x)
 all_but_one_labelled <- function(x) {
 
   all_but_one_labelled_answer <- FALSE
 
   if (is_labelled(x)) {
-    unlabelled_x <- unlabelled_values(x, na.rm = TRUE)
-    labelled_x <- labelled_values(x, na.rm = TRUE)
-    if (length(unlabelled_x) == 1) {
-      if (unlabelled_x > min(labelled_x) & unlabelled_x < max(labelled_x)) {
-        all_but_one_labelled_answer <- TRUE
+    if (is.numeric(x)) {
+      unlabelled_x <- unlabelled_values(x, na.rm = TRUE)
+      labelled_x <- labelled_values(x, na.rm = TRUE)
+      if ((length(unlabelled_x) == 1) & (length(labelled_x) > 0)) {
+        if (unlabelled_x > min(labelled_x) & unlabelled_x < max(labelled_x)) {
+          all_but_one_labelled_answer <- TRUE
+        }
       }
     }
-
   } else {
-    warning("The argument of `all_labelled` is not a labelled vector: FALSE returned.")
+    warning("The argument of `all_but_one_labelled` is not a labelled vector: FALSE returned.")
   }
   return(all_but_one_labelled_answer)
 }

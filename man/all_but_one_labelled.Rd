@@ -18,4 +18,8 @@ Check whether all values but one in the middle have labels
 \details{
 Check whether all non-NA but one in the middle values of a labelled variable have labels.
 }
+\examples{
+x <- haven::labelled(c(1, 1, 2, 3, 4), c(Male = 1, Male = 2, Female = 4))
+all_but_one_labelled(x)
+}
 

@@ -259,25 +259,26 @@ rlms_cleanup <- function(df, suppress = TRUE,
   return(df)
 }
 
-#' Transform all labelled variables into numeric
+#' Transform all labelled variables into plain vector variables
 #'
-#' Transform all labelled variables into numeric
+#' Transform all labelled variables into plain vector variables
 #'
-#' Transform all labelled variables into numeric
+#' Transform all labelled variables into plain vector variables
 #'
 #' @param df data.frame with labelled variables
 #' @export
 #' @return df data.frame with numeric variables instead of labelled
 #' @examples
 #' df_labelled <- data.frame(x = haven::labelled(c(1, 1, 2, NA), c(Male = 1, Female = 2)), y = 1:4)
-#' df_new <- rlms_labelled2numeric(df_labelled)
-rlms_labelled2numeric <- function(df) {
+#' df_new <- rlms_labelled2plain(df_labelled)
+rlms_labelled2plain <- function(df) {
   for (var in names(df)) {
     if (is_labelled(df[[var]])) {
       # preserve variable label: it will show automatically in Rstudio
       variable_label <- attr(df[[var]], "label")
 
-      df[[var]] <- as.numeric(df[[var]])
+      # as.vector works well with both numeric and character variables
+      df[[var]] <- as.vector(df[[var]])
 
       attr(df[[var]], "label") <- variable_label
     }
@@ -495,7 +496,7 @@ rlms_read <- function(file, haven = c("factor", "labelled", "numeric"),
   }
 
   if (haven == "numeric") {
-    df <- rlms_labelled2numeric(df)
+    df <- rlms_labelled2plain(df)
   }
 
 

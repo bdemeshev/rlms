@@ -164,6 +164,7 @@ rlms_yesno_standartize <- function(x) {
 #' @param suppress logical, if true the default message is suppressed
 #' @param nine2na convert 99999990+ to NA for numeric variables
 #' @param empty2na convert empty character values to NA
+#' @param nan2na convert NaN to NA
 #' @param colnames_tolower a logical value, indicating whether variable names should be converted to lowercase.
 #' @param verbose add some debugging output
 #' TRUE by default.
@@ -171,6 +172,7 @@ rlms_yesno_standartize <- function(x) {
 #' @return dataframe
 rlms_cleanup <- function(df, suppress = TRUE,
                          empty2na = TRUE,
+                         nan2na = TRUE, 
                          nine2na = TRUE,
                          yesno = TRUE,
                          apostrophe = TRUE,
@@ -181,6 +183,7 @@ rlms_cleanup <- function(df, suppress = TRUE,
   if (verbose) {
     message("Cleanup options:")
     message("Convert '' to NA, empty2na = ", empty2na)
+    message("Convert NaN to NA, nan2na = ", nan2na)
     message("Convert 99999990+ to NA, nine2na = ", nine2na)
     message("Convert column names to lowercase, colnames_tolower = ", colnames_tolower)
     message("Standartise Yes/NO to yes/no, yesno = ", yesno)
@@ -202,14 +205,18 @@ rlms_cleanup <- function(df, suppress = TRUE,
       # message("Processing variable: ", var, " of class ", var_class)
     }
     
+    if (nan2na) {
+      df[[var]][is.nan(df[[var]])] <- NA
+    }
 
-    if ((nine2na) & (var_class == "numeric")) {
+    if ((nine2na) & (is.numeric(df[[var]]))) {
+      # is.numeric will work for pure numeric and labelled numeric
       # replace 99999990+ for numeric variables
       df[[var]][df[[var]] > 99999990] <- NA
       # one cannot use ifelse as it destroys attributes!!!
     }
     
-    if (empty2na)  {
+    if ((empty2na) & (is.character(df[[var]])))  {
       df[[var]][df[[var]] == ""] <- NA
     }
     
@@ -284,6 +291,63 @@ rlms_labelled2plain <- function(df) {
 }
 
 
+#' Transform one labelled variable or data.frame into factor or numeric
+#'
+#' Transform one labelled variable or data.frame into factor or numeric
+#'
+#' Transform one labelled variable or data.frame into factor or numeric
+#'
+#' @param x labelled vector or data.frame
+#' @param ... other parameters
+#' @export
+#' @return factor or numeric variable instead of labelled
+#' @examples
+#' x = haven::labelled(c(1, 1, 2, NA), c(Male = 1, Female = 2))
+#' rlms_labelled2factor(x)
+rlms_labelled2factor <- function(x, ...) {
+  UseMethod("rlms_labelled2factor", x)
+}
+
+
+#' Transform one labelled variable into factor or numeric
+#'
+#' Transform one labelled variable into factor or numeric
+#'
+#' Transform one labelled variable into factor or numeric
+#'
+#' @export
+#' @rdname rlms_labelled2factor
+#' @return factor or numeric variable instead of labelled
+#' @examples
+#' x = haven::labelled(c(1, 1, 2, NA), c(Male = 1, Female = 2))
+#' rlms_labelled2factor(x)
+#' df_labelled <- data.frame(x = haven::labelled(c(1, 1, 2, NA), c(Male = 1, Female = 2)), y = 1:4)
+#' df_new <- rlms_labelled2factor(df_labelled)
+rlms_labelled2factor.labelled <- function(x, ...) {
+  
+  variable_label <- attr(x, "label")
+  
+  if (all_labelled(x)) {
+    # Rule 1: If all values are labelled then type is factor
+    x <- as_factor_safe(x)
+    
+  } else if (all_but_one_labelled(x)) {
+    # Rule 2: If all values but one in the middle are labelled then type is factor
+    x <- as_factor_safe(x)
+    message("Variable was considered as factor: it has only one unlabelled value.")
+    message("This unlabelled value is neither minimal neither maximal.")
+    
+  } else if (all_but_rlmsna_labelled(x)) {
+    # Rule 3: If all unlabelled values of a numeric variable are NA codes then type is factor
+    x <- as_factor_safe(x)
+    message("Variable was considered as factor: all unlabelled values are bigger than 99999990.")
+    
+  } 
+  
+  attr(x, "label") <- variable_label
+  return(x)
+}
+
 
 #' Transform all labelled variables into factor or numeric
 #'
@@ -291,56 +355,56 @@ rlms_labelled2plain <- function(df) {
 #'
 #' Transform all labelled variables into factor or numeric
 #'
-#' @param df data.frame with labelled variables
 #' @param verbose add some debugging information
 #' @export
+#' @rdname rlms_labelled2factor
 #' @return df data.frame with factor or numeric variables instead of labelled
 #' @examples
 #' df_labelled <- data.frame(x = haven::labelled(c(1, 1, 2, NA), c(Male = 1, Female = 2)), y = 1:4)
 #' df_new <- rlms_labelled2factor(df_labelled)
-rlms_labelled2factor <- function(df, verbose = FALSE) {
-
+rlms_labelled2factor.data.frame <- function(x, verbose = FALSE, ...) {
+  
   if (verbose) {
     message("The option haven = 'factor' is experimental and subject to change.")
   }
-
-
-  for (var in names(df)) {
+  
+  
+  for (var in names(x)) {
     # preserve variable label: it will show automatically in Rstudio
-    var_class <- class(df[[var]])
+    var_class <- class(x[[var]])
     if (verbose) {
       # message("Converting variable ", var, " of class ",  var_class)
     }
-    variable_label <- attr(df[[var]], "label")
-
-    if (is_labelled(df[[var]])) {
-      if (all_labelled(df[[var]])) {
+    variable_label <- attr(x[[var]], "label")
+    
+    if (is_labelled(x[[var]])) {
+      if (all_labelled(x[[var]])) {
         # Rule 1: If all values are labelled then type is factor
-        df[[var]] <- as_factor_safe(df[[var]])
-
+        x[[var]] <- as_factor_safe(x[[var]])
+        
         # standard conversion will throw warning in the case of duplicate levels:
-        # df[[var]] <- haven::as_factor(df[[var]])
-
-      } else if (all_but_one_labelled(df[[var]])) {
+        # x[[var]] <- haven::as_factor(x[[var]])
+        
+      } else if (all_but_one_labelled(x[[var]])) {
         # Rule 2: If all values but one in the middle are labelled then type is factor
-        df[[var]] <- as_factor_safe(df[[var]])
+        x[[var]] <- as_factor_safe(x[[var]])
         message("Labelled variable ", var, " was considered as factor: it has only one unlabelled value.")
         message("This unlabelled value is neither minimal neither maximal.")
-
-      } else if (all_but_rlmsna_labelled(df[[var]])) {
+        
+      } else if (all_but_rlmsna_labelled(x[[var]])) {
         # Rule 3: If all unlabelled values of a numeric variable are NA codes then type is factor
-        df[[var]] <- as_factor_safe(df[[var]])
+        x[[var]] <- as_factor_safe(x[[var]])
         message("Labelled variable ", var, " was considered as factor: all unlabelled values are bigger than 99999990.")
-
+        
       } else { 
         # numeric will be kept as numeric and character as character
-        df[[var]] <- as.vector(df[[var]])
+        x[[var]] <- as.vector(x[[var]])
       }
     }
-
-    attr(df[[var]], "label") <- variable_label
+    
+    attr(x[[var]], "label") <- variable_label
   }
-  return(df)
+  return(x)
 }
 
 

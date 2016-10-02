@@ -2,25 +2,51 @@
 % Please edit documentation in R/rlms.R
 \name{rlms_labelled2factor}
 \alias{rlms_labelled2factor}
-\title{Transform all labelled variables into factor or numeric}
+\alias{rlms_labelled2factor.data.frame}
+\alias{rlms_labelled2factor.labelled}
+\title{Transform one labelled variable or data.frame into factor or numeric}
 \usage{
-rlms_labelled2factor(df, verbose = FALSE)
+rlms_labelled2factor(x, ...)
+
+\method{rlms_labelled2factor}{labelled}(x, ...)
+
+\method{rlms_labelled2factor}{data.frame}(x, verbose = FALSE, ...)
 }
 \arguments{
-\item{df}{data.frame with labelled variables}
+\item{x}{labelled vector or data.frame}
+
+\item{...}{other parameters}
 
 \item{verbose}{add some debugging information}
 }
 \value{
+factor or numeric variable instead of labelled
+
+factor or numeric variable instead of labelled
+
 df data.frame with factor or numeric variables instead of labelled
 }
 \description{
+Transform one labelled variable or data.frame into factor or numeric
+
+Transform one labelled variable into factor or numeric
+
 Transform all labelled variables into factor or numeric
 }
 \details{
+Transform one labelled variable or data.frame into factor or numeric
+
+Transform one labelled variable into factor or numeric
+
 Transform all labelled variables into factor or numeric
 }
 \examples{
+x = haven::labelled(c(1, 1, 2, NA), c(Male = 1, Female = 2))
+rlms_labelled2factor(x)
+x = haven::labelled(c(1, 1, 2, NA), c(Male = 1, Female = 2))
+rlms_labelled2factor(x)
+df_labelled <- data.frame(x = haven::labelled(c(1, 1, 2, NA), c(Male = 1, Female = 2)), y = 1:4)
+df_new <- rlms_labelled2factor(df_labelled)
 df_labelled <- data.frame(x = haven::labelled(c(1, 1, 2, NA), c(Male = 1, Female = 2)), y = 1:4)
 df_new <- rlms_labelled2factor(df_labelled)
 }

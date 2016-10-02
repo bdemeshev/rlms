@@ -4,8 +4,8 @@
 \alias{rlms_cleanup}
 \title{Clean rlms data}
 \usage{
-rlms_cleanup(df, suppress = TRUE, empty2na = TRUE, nine2na = TRUE,
-  yesno = TRUE, apostrophe = TRUE, remove_empty = TRUE,
+rlms_cleanup(df, suppress = TRUE, empty2na = TRUE, nan2na = TRUE,
+  nine2na = TRUE, yesno = TRUE, apostrophe = TRUE, remove_empty = TRUE,
   colnames_tolower = TRUE, verbose = FALSE)
 }
 \arguments{
@@ -14,6 +14,8 @@ rlms_cleanup(df, suppress = TRUE, empty2na = TRUE, nine2na = TRUE,
 \item{suppress}{logical, if true the default message is suppressed}
 
 \item{empty2na}{convert empty character values to NA}
+
+\item{nan2na}{convert NaN to NA}
 
 \item{nine2na}{convert 99999990+ to NA for numeric variables}
 

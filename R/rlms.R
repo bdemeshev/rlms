@@ -164,6 +164,7 @@ rlms_yesno_standartize <- function(x) {
 #' @param suppress logical, if true the default message is suppressed
 #' @param nine2na convert 99999990+ to NA for numeric variables
 #' @param empty2na convert empty character values to NA
+#' @param nan2na convert NaN to NA
 #' @param colnames_tolower a logical value, indicating whether variable names should be converted to lowercase.
 #' @param verbose add some debugging output
 #' TRUE by default.
@@ -171,6 +172,7 @@ rlms_yesno_standartize <- function(x) {
 #' @return dataframe
 rlms_cleanup <- function(df, suppress = TRUE,
                          empty2na = TRUE,
+                         nan2na = TRUE, 
                          nine2na = TRUE,
                          yesno = TRUE,
                          apostrophe = TRUE,
@@ -181,6 +183,7 @@ rlms_cleanup <- function(df, suppress = TRUE,
   if (verbose) {
     message("Cleanup options:")
     message("Convert '' to NA, empty2na = ", empty2na)
+    message("Convert NaN to NA, nan2na = ", nan2na)
     message("Convert 99999990+ to NA, nine2na = ", nine2na)
     message("Convert column names to lowercase, colnames_tolower = ", colnames_tolower)
     message("Standartise Yes/NO to yes/no, yesno = ", yesno)
@@ -202,14 +205,18 @@ rlms_cleanup <- function(df, suppress = TRUE,
       # message("Processing variable: ", var, " of class ", var_class)
     }
     
+    if (nan2na) {
+      df[[var]][is.nan(df[[var]])] <- NA
+    }
 
-    if ((nine2na) & (var_class == "numeric")) {
+    if ((nine2na) & (is.numeric(df[[var]]))) {
+      # is.numeric will work for pure numeric and labelled numeric
       # replace 99999990+ for numeric variables
       df[[var]][df[[var]] > 99999990] <- NA
       # one cannot use ifelse as it destroys attributes!!!
     }
     
-    if (empty2na)  {
+    if ((empty2na) & (is.character(df[[var]])))  {
       df[[var]][df[[var]] == ""] <- NA
     }
     
